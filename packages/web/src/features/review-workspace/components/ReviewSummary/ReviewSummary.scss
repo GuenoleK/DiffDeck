@@ -1,0 +1,19 @@
+.review-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+
+  &__item {
+    border: 1px solid var(--dd-color-border);
+    border-radius: 999px;
+    padding: 0.35rem 0.65rem;
+    color: var(--dd-color-text-muted);
+    background: rgba(17, 22, 32, 0.78);
+    font-size: 0.85rem;
+  }
+
+  &__item--status {
+    color: var(--dd-color-praise);
+  }
+}

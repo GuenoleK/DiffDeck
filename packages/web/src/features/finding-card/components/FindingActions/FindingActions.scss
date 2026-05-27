@@ -1,0 +1,20 @@
+.finding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid var(--dd-color-border);
+  padding: 0.85rem 1rem;
+
+  &__status {
+    color: var(--dd-color-text-muted);
+    font-size: 0.88rem;
+  }
+
+  &__buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+}

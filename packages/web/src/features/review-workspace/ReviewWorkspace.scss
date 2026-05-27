@@ -1,0 +1,48 @@
+.review-workspace {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+
+  &__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__eyebrow {
+    margin: 0 0 0.3rem;
+    color: var(--dd-color-text-muted);
+    font-size: 0.8rem;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1;
+  }
+
+  &__content {
+    display: grid;
+    gap: 1rem;
+  }
+
+  &__empty {
+    border: 1px dashed var(--dd-color-border);
+    border-radius: var(--dd-radius-card);
+    padding: 2rem;
+    background: rgba(17, 22, 32, 0.72);
+  }
+
+  &__empty-title {
+    margin: 0 0 0.5rem;
+  }
+
+  &__empty-text {
+    margin: 0;
+    color: var(--dd-color-text-muted);
+  }
+}

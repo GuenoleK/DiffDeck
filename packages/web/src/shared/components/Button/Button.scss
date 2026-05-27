@@ -1,0 +1,22 @@
+.dd-button {
+  border: 1px solid var(--dd-color-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  color: var(--dd-color-text);
+  background: transparent;
+
+  &:hover {
+    border-color: var(--dd-color-border-strong);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &--primary {
+    border-color: #537cff;
+    background: #537cff;
+    color: #ffffff;
+  }
+
+  &--quiet {
+    color: var(--dd-color-text-muted);
+  }
+}

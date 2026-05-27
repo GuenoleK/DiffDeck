@@ -1,0 +1,55 @@
+.finding-card {
+  border: 1px solid var(--dd-color-border);
+  border-left-width: 4px;
+  border-radius: var(--dd-radius-card);
+  background: linear-gradient(180deg, var(--dd-color-surface-raised), var(--dd-color-surface));
+  box-shadow: var(--dd-shadow-card);
+  overflow: hidden;
+
+  &--critical {
+    border-left-color: var(--dd-color-critical);
+  }
+
+  &--important {
+    border-left-color: var(--dd-color-important);
+  }
+
+  &--suggestion {
+    border-left-color: var(--dd-color-suggestion);
+  }
+
+  &--question {
+    border-left-color: var(--dd-color-question);
+  }
+
+  &--praise {
+    border-left-color: var(--dd-color-praise);
+  }
+
+  &__body {
+    display: grid;
+    gap: 1rem;
+    padding: 0 1rem 1rem;
+  }
+
+  &__explanation,
+  &__suggestion-text {
+    margin: 0;
+    color: var(--dd-color-text);
+    line-height: 1.6;
+  }
+
+  &__suggestion {
+    border: 1px solid var(--dd-color-border);
+    border-radius: 6px;
+    padding: 0.85rem;
+    background: rgba(9, 11, 16, 0.46);
+  }
+
+  &__section-title {
+    margin: 0 0 0.45rem;
+    color: var(--dd-color-text-muted);
+    font-size: 0.82rem;
+    text-transform: uppercase;
+  }
+}

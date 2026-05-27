@@ -1,0 +1,52 @@
+.finding-card-header {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+
+  &__main {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__severity {
+    border-radius: 999px;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &__severity--critical {
+    color: var(--dd-color-critical);
+  }
+
+  &__severity--important {
+    color: var(--dd-color-important);
+  }
+
+  &__severity--suggestion {
+    color: var(--dd-color-suggestion);
+  }
+
+  &__severity--question {
+    color: var(--dd-color-question);
+  }
+
+  &__severity--praise {
+    color: var(--dd-color-praise);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  &__location {
+    margin: 0;
+    color: var(--dd-color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.86rem;
+    overflow-wrap: anywhere;
+  }
+}

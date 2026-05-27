@@ -1,0 +1,14 @@
+.finding-snippet {
+  margin: 0;
+  border: 1px solid var(--dd-color-border);
+  border-radius: 6px;
+  padding: 0.85rem;
+  background: #07090d;
+  overflow: auto;
+
+  &__code {
+    color: #d7e0f3;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+    font-size: 0.86rem;
+  }
+}

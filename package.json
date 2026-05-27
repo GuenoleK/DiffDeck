@@ -1,0 +1,22 @@
+{
+  "name": "diffdeck-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev -w @diffdeck/server",
+    "dev:web": "npm run dev -w @diffdeck/web",
+    "dev:mcp": "npm run dev -w @diffdeck/mcp",
+    "start:server": "node packages/server/dist/index.js",
+    "start:mcp": "node packages/mcp/dist/index.js",
+    "build": "npm run build -w @diffdeck/core && npm run build -w @diffdeck/server && npm run build -w @diffdeck/mcp && npm run build -w @diffdeck/cli && npm run build -w @diffdeck/web",
+    "typecheck": "npm run build -w @diffdeck/core && npm run build -w @diffdeck/server && npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.0",
+    "typescript": "^5.8.0"
+  }
+}
