@@ -10,4 +10,10 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
+  text-rendering: geometricPrecision;
+}
+
+::selection {
+  color: #07100f;
+  background: var(--dd-color-accent-strong);
 }

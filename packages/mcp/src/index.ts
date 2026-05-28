@@ -27,6 +27,18 @@ server.tool(
 );
 
 server.tool(
+  "reset_review",
+  "Reset the active DiffDeck review by clearing all findings, context, approvals, and session state.",
+  {},
+  async () => {
+    const snapshot = await client.resetReview();
+    return {
+      content: [{ type: "text", text: JSON.stringify(snapshot, null, 2) }],
+    };
+  },
+);
+
+server.tool(
   "add_finding",
   "Add a structured draft finding to the active DiffDeck review.",
   {
@@ -68,11 +80,37 @@ server.tool(
 );
 
 server.tool(
+  "set_review_context",
+  "Set a concise functional or ticket context summary for the active DiffDeck review.",
+  {
+    contextSummary: z.string().min(1),
+  },
+  async (input) => {
+    const review = await client.updateReviewContext({ contextSummary: input.contextSummary });
+    return {
+      content: [{ type: "text", text: JSON.stringify(review, null, 2) }],
+    };
+  },
+);
+
+server.tool(
   "list_findings",
   "List findings currently stored in the active DiffDeck review.",
   {},
   async () => {
     const findings = await client.listFindings();
+    return {
+      content: [{ type: "text", text: JSON.stringify(findings, null, 2) }],
+    };
+  },
+);
+
+server.tool(
+  "list_approved_findings",
+  "List human-approved DiffDeck findings that are ready to be prefilled in a code review platform.",
+  {},
+  async () => {
+    const findings = await client.listApprovedFindings();
     return {
       content: [{ type: "text", text: JSON.stringify(findings, null, 2) }],
     };

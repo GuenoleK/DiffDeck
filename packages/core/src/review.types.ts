@@ -24,6 +24,7 @@ export type Review = {
   title: string;
   sourceUrl?: string;
   repositoryPath?: string;
+  contextSummary?: string;
   status: ReviewStatus;
   createdAt: string;
   updatedAt: string;
@@ -49,4 +50,10 @@ export type Finding = {
 export type ReviewSnapshot = {
   review: Review;
   findings: Finding[];
+};
+
+export type ReviewSession = {
+  format: "diffdeck.session.v1";
+  exportedAt: string;
+  snapshot: ReviewSnapshot;
 };

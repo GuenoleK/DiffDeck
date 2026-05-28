@@ -17,6 +17,25 @@ export const CreateReviewSchema = z.object({
   title: z.string().min(1).default("Untitled review"),
   sourceUrl: z.string().url().optional(),
   repositoryPath: z.string().optional(),
+  contextSummary: z.string().optional(),
+});
+
+export const ReviewPatchSchema = z.object({
+  title: z.string().min(1).optional(),
+  sourceUrl: z.string().url().optional(),
+  repositoryPath: z.string().optional(),
+  contextSummary: z.string().optional(),
+});
+
+export const ReviewSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  sourceUrl: z.string().url().optional(),
+  repositoryPath: z.string().optional(),
+  contextSummary: z.string().optional(),
+  status: z.enum(["draft", "ready_for_human_review", "closed"]),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
 });
 
 export const FindingDraftSchema = z.object({
@@ -43,6 +62,27 @@ export const FindingPatchSchema = z.object({
   confidence: z.enum(confidenceValues).optional(),
 });
 
+export const FindingSchema = FindingDraftSchema.extend({
+  id: z.string().min(1),
+  reviewId: z.string().min(1),
+  status: z.enum(findingStatuses),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+});
+
+export const ReviewSnapshotSchema = z.object({
+  review: ReviewSchema,
+  findings: z.array(FindingSchema),
+});
+
+export const ReviewSessionSchema = z.object({
+  format: z.literal("diffdeck.session.v1"),
+  exportedAt: z.string().min(1),
+  snapshot: ReviewSnapshotSchema,
+});
+
 export type CreateReviewInput = z.infer<typeof CreateReviewSchema>;
+export type ReviewPatchInput = z.infer<typeof ReviewPatchSchema>;
 export type FindingDraftInput = z.infer<typeof FindingDraftSchema>;
 export type FindingPatchInput = z.infer<typeof FindingPatchSchema>;
+export type ReviewSessionInput = z.infer<typeof ReviewSessionSchema>;

@@ -1,0 +1,52 @@
+.editable-finding-comment {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--dd-color-border);
+  border-radius: 5px;
+  padding: 0.85rem;
+  background: var(--dd-color-surface-muted);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__label {
+    color: var(--dd-color-text-soft);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+    font-weight: 620;
+    text-transform: uppercase;
+  }
+
+  &__state {
+    color: var(--dd-color-accent-strong);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+  }
+
+  &__textarea {
+    min-height: 7.5rem;
+    resize: vertical;
+    border: 1px solid var(--dd-color-border);
+    border-radius: 5px;
+    padding: 0.85rem;
+    color: var(--dd-color-text);
+    background: #0b0c0c;
+    font: inherit;
+    line-height: 1.55;
+
+    &:focus {
+      outline: 0;
+      border-color: var(--dd-color-accent);
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

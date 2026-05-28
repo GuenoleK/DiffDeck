@@ -8,6 +8,10 @@ Read these files before changing the application:
 4. `frontend.md`
 5. `mcp-workflow.md`
 
+For reviewing a DiffDeck PR/MR/branch/diff with DiffDeck, also read:
+
+- `reviewing-diffdeck.md`
+
 ## Non-Negotiables
 
 - DiffDeck is agent-agnostic: Codex, Claude, Gemini, and other tools should be able to use it.
@@ -18,3 +22,4 @@ Read these files before changing the application:
 - Do not introduce Tailwind.
 - Prefer small, focused components and helpers over large files.
 - Keep durable instructions here instead of duplicating them in agent-specific files.
+- Do not publish personal local paths, secrets, tokens, private URLs, or sensitive environment values in docs, snippets, or examples.

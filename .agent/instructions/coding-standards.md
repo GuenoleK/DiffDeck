@@ -24,3 +24,11 @@
 ## Human-In-The-Loop Rule
 
 AI-generated findings are drafts. Do not implement behavior that publishes comments to a remote platform without explicit human approval.
+
+## Public Documentation And Secrets
+
+- Do not commit personal absolute paths from a developer machine in README files, distributed snippets, examples, generated docs, or public-facing configuration.
+- Use placeholders such as `<DIFFDECK_ROOT>`, `<TARGET_PROJECT_ROOT>`, or `<MCP_CONFIG_PATH>` in documentation.
+- Do not commit API keys, tokens, passwords, private URLs, customer data, or sensitive environment variable values.
+- Environment variable names are allowed in examples, but values must be safe placeholders unless they are harmless local defaults such as `http://127.0.0.1:4337/api`.
+- Before finishing documentation or distributed assets, search for personal paths and secret-like values.

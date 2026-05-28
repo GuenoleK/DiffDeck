@@ -5,4 +5,6 @@ This folder contains the shared instructions and skills used by AI agents workin
 - `instructions/`: source of truth for project rules.
 - `skills/`: reusable agent workflows.
 
+Use `instructions/reviewing-diffdeck.md` and `skills/diffdeck-self-review` when reviewing DiffDeck PRs/MRs/branches with DiffDeck itself.
+
 Root agent files (`AGENTS.md`, `CLAUDE.md`, `GEMINI.md`) must stay thin and point here.

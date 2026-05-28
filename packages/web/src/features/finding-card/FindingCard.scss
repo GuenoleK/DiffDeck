@@ -1,55 +1,58 @@
 .finding-card {
+  position: relative;
   border: 1px solid var(--dd-color-border);
-  border-left-width: 4px;
   border-radius: var(--dd-radius-card);
-  background: linear-gradient(180deg, var(--dd-color-surface-raised), var(--dd-color-surface));
-  box-shadow: var(--dd-shadow-card);
+  background: var(--dd-color-surface);
+  box-shadow: none;
   overflow: hidden;
 
+  &::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--finding-accent);
+    content: "";
+  }
+
   &--critical {
-    border-left-color: var(--dd-color-critical);
+    --finding-accent: var(--dd-color-critical);
   }
 
   &--important {
-    border-left-color: var(--dd-color-important);
+    --finding-accent: var(--dd-color-important);
   }
 
   &--suggestion {
-    border-left-color: var(--dd-color-suggestion);
+    --finding-accent: var(--dd-color-suggestion);
   }
 
   &--question {
-    border-left-color: var(--dd-color-question);
+    --finding-accent: var(--dd-color-question);
   }
 
   &--praise {
-    border-left-color: var(--dd-color-praise);
+    --finding-accent: var(--dd-color-praise);
+  }
+
+  &--status-approved {
+    border-color: color-mix(in srgb, var(--dd-color-praise) 36%, var(--dd-color-border));
+  }
+
+  &--status-rejected {
+    opacity: 0.74;
   }
 
   &__body {
     display: grid;
-    gap: 1rem;
+    gap: 0.8rem;
     padding: 0 1rem 1rem;
   }
 
-  &__explanation,
-  &__suggestion-text {
+  &__explanation {
     margin: 0;
-    color: var(--dd-color-text);
-    line-height: 1.6;
-  }
-
-  &__suggestion {
-    border: 1px solid var(--dd-color-border);
-    border-radius: 6px;
-    padding: 0.85rem;
-    background: rgba(9, 11, 16, 0.46);
-  }
-
-  &__section-title {
-    margin: 0 0 0.45rem;
-    color: var(--dd-color-text-muted);
-    font-size: 0.82rem;
-    text-transform: uppercase;
+    color: var(--dd-color-text-soft);
+    line-height: 1.62;
   }
 }

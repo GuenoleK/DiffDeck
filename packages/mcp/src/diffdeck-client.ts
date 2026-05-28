@@ -13,12 +13,25 @@ export class DiffDeckClient {
     });
   }
 
+  async resetReview() {
+    return this.post("/reviews/active/reset", {});
+  }
+
+  async updateReviewContext(input: { contextSummary: string }) {
+    return this.patch("/reviews/active", input);
+  }
+
   async addFinding(input: FindingDraftInput) {
     return this.post("/reviews/active/findings", input);
   }
 
   async listFindings() {
     const response = await fetch(`${this.baseUrl}/reviews/active/findings`);
+    return response.json();
+  }
+
+  async listApprovedFindings() {
+    const response = await fetch(`${this.baseUrl}/reviews/active/approved-findings`);
     return response.json();
   }
 
@@ -29,6 +42,20 @@ export class DiffDeckClient {
   private async post(path: string, body: unknown) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DiffDeck API error ${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
+  }
+
+  private async patch(path: string, body: unknown) {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });

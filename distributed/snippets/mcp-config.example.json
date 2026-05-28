@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "diffdeck": {
+      "command": "node",
+      "args": [
+        "<DIFFDECK_ROOT>\\packages\\mcp\\dist\\index.js"
+      ],
+      "env": {
+        "DIFFDECK_API_URL": "http://127.0.0.1:4337/api"
+      }
+    }
+  }
+}
