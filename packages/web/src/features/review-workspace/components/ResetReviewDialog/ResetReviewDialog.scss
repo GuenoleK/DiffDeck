@@ -21,7 +21,7 @@
     border-radius: var(--dd-radius-card);
     padding: 1.25rem;
     background: var(--dd-color-surface);
-    box-shadow: var(--dd-shadow-card);
+    box-shadow: var(--dd-shadow-panel);
   }
 
   &__eyebrow {
@@ -58,12 +58,18 @@
 
   &__input {
     border: 1px solid var(--dd-color-border);
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 0.7rem 0.8rem;
     color: var(--dd-color-text);
-    background: rgba(3, 6, 12, 0.52);
+    background: #0b0c0c;
     font: inherit;
     text-transform: none;
+
+    &:focus {
+      outline: 0;
+      border-color: var(--dd-color-critical);
+      box-shadow: 0 0 0 3px rgba(255, 111, 138, 0.2);
+    }
   }
 
   &__actions {

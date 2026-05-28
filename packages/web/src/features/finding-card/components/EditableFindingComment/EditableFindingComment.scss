@@ -2,9 +2,9 @@
   display: grid;
   gap: 0.65rem;
   border: 1px solid var(--dd-color-border);
-  border-radius: 6px;
+  border-radius: 5px;
   padding: 0.85rem;
-  background: rgba(9, 11, 16, 0.46);
+  background: var(--dd-color-surface-muted);
 
   &__header {
     display: flex;
@@ -14,32 +14,34 @@
   }
 
   &__label {
-    color: var(--dd-color-text-muted);
-    font-size: 0.82rem;
-    font-weight: 700;
+    color: var(--dd-color-text-soft);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+    font-weight: 620;
     text-transform: uppercase;
   }
 
   &__state {
-    color: var(--dd-color-suggestion);
-    font-size: 0.82rem;
+    color: var(--dd-color-accent-strong);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
   }
 
   &__textarea {
     min-height: 7.5rem;
     resize: vertical;
     border: 1px solid var(--dd-color-border);
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 0.85rem;
     color: var(--dd-color-text);
-    background: rgba(3, 6, 12, 0.72);
+    background: #0b0c0c;
     font: inherit;
     line-height: 1.55;
 
     &:focus {
-      outline: 2px solid rgba(83, 124, 255, 0.4);
-      outline-offset: 2px;
-      border-color: #537cff;
+      outline: 0;
+      border-color: var(--dd-color-accent);
+      box-shadow: var(--dd-focus-ring);
     }
   }
 

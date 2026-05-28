@@ -86,16 +86,16 @@ export function PublicationQueue({ approvedFindings, onShare, review }: Publicat
       aria-label="Publication queue"
     >
       <div className="publication-queue__content">
-        <p className="publication-queue__eyebrow">Publication queue</p>
+        <p className="publication-queue__eyebrow">Human queue</p>
         <h2 className="publication-queue__title">
           {hasApprovedFindings
-            ? `${approvedCount} approved comment${approvedCount > 1 ? "s" : ""} ready for browser prefill`
-            : "No approved comments yet"}
+            ? `${approvedCount} approved comment${approvedCount > 1 ? "s" : ""} ready`
+            : "Nothing approved yet"}
         </h2>
         <p className="publication-queue__text">
           {hasApprovedFindings
-            ? "Ask the AI agent to use one mode: pilot your default browser, use the integrated browser as fallback, or provide manual comments."
-            : "Approve a finding to add it to this stable queue without shifting the review list."}
+            ? "Open the review, copy the automation prompt, or export a clean report from the comments you already validated."
+            : "Approve a finding to move it into a stable publication queue while the review list stays in place."}
         </p>
       </div>
       <div className="publication-queue__actions">

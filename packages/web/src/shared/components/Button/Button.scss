@@ -1,27 +1,42 @@
 .dd-button {
   border: 1px solid var(--dd-color-border);
-  border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  border-radius: 5px;
+  min-height: 2rem;
+  padding: 0.42rem 0.68rem;
   color: var(--dd-color-text);
   background: transparent;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    color 140ms ease,
+    background 140ms ease;
 
   &:hover {
     border-color: var(--dd-color-border-strong);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--dd-color-surface-muted);
   }
 
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.45;
+  &:focus-visible {
+    outline: 0;
+    box-shadow: var(--dd-focus-ring);
   }
 
   &--primary {
-    border-color: #537cff;
-    background: #537cff;
-    color: #ffffff;
+    border-color: var(--dd-color-accent);
+    color: var(--dd-color-bg);
+    background: var(--dd-color-accent);
+    font-weight: 680;
   }
 
   &--quiet {
     color: var(--dd-color-text-muted);
+  }
+
+  &:disabled {
+    border-color: rgba(255, 255, 255, 0.06);
+    cursor: not-allowed;
+    color: var(--dd-color-text-muted);
+    background: transparent;
+    opacity: 0.52;
   }
 }

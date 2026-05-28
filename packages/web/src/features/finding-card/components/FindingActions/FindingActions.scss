@@ -4,11 +4,21 @@
   justify-content: space-between;
   gap: 1rem;
   border-top: 1px solid var(--dd-color-border);
-  padding: 0.85rem 1rem;
+  padding: 0.82rem 1rem;
+  background: var(--dd-color-surface-muted);
 
   &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     color: var(--dd-color-text-muted);
-    font-size: 0.88rem;
+    font-family: var(--dd-font-mono);
+    font-size: 0.82rem;
+    text-transform: capitalize;
+
+    &::before {
+      display: none;
+    }
   }
 
   &__buttons {
@@ -27,23 +37,35 @@
   }
 
   &__button--active {
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 -1px 0 currentColor;
   }
 
   &__button--approved.finding-actions__button--active {
     border-color: var(--dd-color-praise);
-    background: rgba(82, 224, 139, 0.18);
+    background: transparent;
+    color: var(--dd-color-praise);
   }
 
   &__button--rejected.finding-actions__button--active {
     border-color: var(--dd-color-critical);
     color: var(--dd-color-critical);
-    background: rgba(255, 94, 123, 0.14);
+    background: transparent;
   }
 
   &__button--resolved.finding-actions__button--active {
     border-color: var(--dd-color-suggestion);
     color: var(--dd-color-suggestion);
-    background: rgba(124, 199, 255, 0.14);
+    background: transparent;
+  }
+}
+
+@media (max-width: 640px) {
+  .finding-actions {
+    align-items: stretch;
+    flex-direction: column;
+
+    &__buttons {
+      justify-content: flex-start;
+    }
   }
 }

@@ -49,7 +49,7 @@ export function FindingCard({ finding, onFindingChange }: FindingCardProps) {
   };
 
   return (
-    <article className={`finding-card finding-card--${finding.severity}`}>
+    <article className={`finding-card finding-card--${finding.severity} finding-card--status-${finding.status}`}>
       <FindingCardHeader finding={finding} />
 
       <div className="finding-card__body">

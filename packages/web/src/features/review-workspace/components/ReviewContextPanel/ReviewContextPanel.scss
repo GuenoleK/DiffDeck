@@ -11,7 +11,7 @@
   padding: 1.25rem;
   border-left: 1px solid var(--dd-color-border);
   background: var(--dd-color-surface);
-  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.32);
+  box-shadow: var(--dd-shadow-panel);
   transform: translateX(100%);
   transition: transform 180ms ease;
 
@@ -30,7 +30,7 @@
 
   &__overlay--visible {
     pointer-events: auto;
-    background: rgba(3, 6, 12, 0.42);
+    background: rgba(3, 6, 12, 0.56);
   }
 
   &__header,
@@ -44,6 +44,7 @@
   &__eyebrow {
     margin: 0 0 0.35rem;
     color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
     font-size: 0.78rem;
     font-weight: 700;
     letter-spacing: 0;
@@ -56,7 +57,7 @@
   }
 
   &__label {
-    color: var(--dd-color-text-muted);
+    color: var(--dd-color-text-soft);
     font-size: 0.82rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -66,22 +67,22 @@
     min-height: 0;
     resize: none;
     border: 1px solid var(--dd-color-border);
-    border-radius: 6px;
+    border-radius: 5px;
     padding: 0.9rem;
     color: var(--dd-color-text);
-    background: rgba(3, 6, 12, 0.52);
+    background: #0b0c0c;
     font: inherit;
     line-height: 1.55;
 
     &:focus {
-      outline: 2px solid rgba(83, 124, 255, 0.4);
-      outline-offset: 2px;
-      border-color: #537cff;
+      outline: 0;
+      border-color: var(--dd-color-accent);
+      box-shadow: var(--dd-focus-ring);
     }
   }
 
   &__state {
-    color: var(--dd-color-suggestion);
+    color: var(--dd-color-accent-strong);
     font-size: 0.85rem;
   }
 }
