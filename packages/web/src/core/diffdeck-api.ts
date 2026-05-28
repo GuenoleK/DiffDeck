@@ -14,6 +14,18 @@ export async function getActiveReview(): Promise<ReviewSnapshot> {
   return response.json();
 }
 
+export async function resetActiveReview(): Promise<ReviewSnapshot> {
+  const response = await fetch(`${apiUrl}/reviews/active/reset`, {
+    method: "POST",
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to reset active review");
+  }
+
+  return response.json();
+}
+
 export async function getActiveReviewSession(): Promise<ReviewSession> {
   const response = await fetch(`${apiUrl}/reviews/active/session`);
 

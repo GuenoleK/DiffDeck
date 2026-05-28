@@ -245,6 +245,7 @@ Example MCP server configuration:
 Available MCP tools:
 
 - `create_review`
+- `reset_review`
 - `set_review_context`
 - `add_finding`
 - `list_findings`
@@ -267,6 +268,12 @@ Use the `Session` button in the review header when you want to hand off or resum
 4. Later, paste the text into the same panel and click `Restore`.
 
 This is a copy/paste safety net for the in-memory MVP. It is not a secret store, so do not put tokens, passwords, API keys, or sensitive environment values in findings or context summaries.
+
+### Reset A Session
+
+Use `Reset` in the review header to explicitly clear the current analysis session. The UI asks for `RESET` before deleting findings, approvals, edited comments, and context.
+
+AI agents can also reset the active analysis through the `reset_review` MCP tool, but only when the user explicitly asks to reset or clear the DiffDeck session.
 
 ### Share Approved Feedback
 

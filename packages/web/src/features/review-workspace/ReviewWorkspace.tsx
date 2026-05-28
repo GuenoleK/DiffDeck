@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
 import type { ReviewSnapshot } from "@diffdeck/core";
-import { getActiveReview, importReviewSession, updateActiveReview, updateFinding } from "../../core/diffdeck-api.js";
+import {
+  getActiveReview,
+  importReviewSession,
+  resetActiveReview,
+  updateActiveReview,
+  updateFinding,
+} from "../../core/diffdeck-api.js";
 import { FindingCard } from "../finding-card/FindingCard.js";
 import { PublicationQueue } from "./components/PublicationQueue/PublicationQueue.js";
+import { ResetReviewDialog } from "./components/ResetReviewDialog/ResetReviewDialog.js";
 import { ReviewContextPanel } from "./components/ReviewContextPanel/ReviewContextPanel.js";
 import { ReviewSharePanel } from "./components/ReviewSharePanel/ReviewSharePanel.js";
 import { ReviewSummary } from "./components/ReviewSummary/ReviewSummary.js";
@@ -12,6 +19,7 @@ import "./ReviewWorkspace.scss";
 export function ReviewWorkspace() {
   const [snapshot, setSnapshot] = useState<ReviewSnapshot | undefined>();
   const [isContextOpen, setIsContextOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isSessionOpen, setIsSessionOpen] = useState(false);
   const approvedFindings = snapshot?.findings.filter((finding) => finding.status === "approved") ?? [];
@@ -52,6 +60,13 @@ export function ReviewWorkspace() {
             >
               Session
             </button>
+            <button
+              className="review-workspace__context-button review-workspace__context-button--danger"
+              onClick={() => setIsResetOpen(true)}
+              type="button"
+            >
+              Reset
+            </button>
             <ReviewSummary snapshot={snapshot} />
           </div>
         ) : null}
@@ -75,6 +90,18 @@ export function ReviewWorkspace() {
         onImport={async (session) => {
           const nextSnapshot = await importReviewSession(session);
           setSnapshot(nextSnapshot);
+          setIsSessionOpen(false);
+        }}
+      />
+
+      <ResetReviewDialog
+        isOpen={isResetOpen}
+        onClose={() => setIsResetOpen(false)}
+        onReset={async () => {
+          const nextSnapshot = await resetActiveReview();
+          setSnapshot(nextSnapshot);
+          setIsContextOpen(false);
+          setIsShareOpen(false);
           setIsSessionOpen(false);
         }}
       />

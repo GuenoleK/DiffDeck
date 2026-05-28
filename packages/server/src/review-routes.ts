@@ -36,6 +36,10 @@ reviewRoutes.get("/reviews/active", (context) => {
   return context.json(reviewStore.snapshot());
 });
 
+reviewRoutes.post("/reviews/active/reset", (context) => {
+  return context.json(reviewStore.reset());
+});
+
 reviewRoutes.get("/reviews/active/session", (context) => {
   return context.json(reviewStore.exportSession());
 });

@@ -17,6 +17,7 @@ DiffDeck MCP is the structured bridge between AI agents and the local dashboard.
 Initial tools:
 
 - `create_review`
+- `reset_review`
 - `set_review_context`
 - `add_finding`
 - `list_findings`
@@ -32,6 +33,8 @@ Future tools:
 
 Browser MCP may open a GitLab/GitHub/Bitbucket merge request and prefill comments, but publication must remain under human control.
 Publication agents should use `list_approved_findings` and treat each finding `suggestion` as the human-edited final comment body.
+
+Use `reset_review` only when the user explicitly asks to reset, clear, or restart the DiffDeck analysis session. Do not reset as part of a normal review update.
 
 Supported browser publication modes are limited to:
 

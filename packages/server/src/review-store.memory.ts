@@ -126,6 +126,12 @@ export class MemoryReviewStore {
     return this.snapshot();
   }
 
+  reset(): ReviewSnapshot {
+    this.activeReview = undefined;
+    this.findings.clear();
+    return this.snapshot();
+  }
+
   snapshot(): ReviewSnapshot {
     return {
       review: this.getOrCreateActiveReview(),

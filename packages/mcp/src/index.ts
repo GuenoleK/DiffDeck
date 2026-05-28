@@ -27,6 +27,18 @@ server.tool(
 );
 
 server.tool(
+  "reset_review",
+  "Reset the active DiffDeck review by clearing all findings, context, approvals, and session state.",
+  {},
+  async () => {
+    const snapshot = await client.resetReview();
+    return {
+      content: [{ type: "text", text: JSON.stringify(snapshot, null, 2) }],
+    };
+  },
+);
+
+server.tool(
   "add_finding",
   "Add a structured draft finding to the active DiffDeck review.",
   {

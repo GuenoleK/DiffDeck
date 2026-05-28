@@ -13,6 +13,10 @@ export class DiffDeckClient {
     });
   }
 
+  async resetReview() {
+    return this.post("/reviews/active/reset", {});
+  }
+
   async updateReviewContext(input: { contextSummary: string }) {
     return this.patch("/reviews/active", input);
   }

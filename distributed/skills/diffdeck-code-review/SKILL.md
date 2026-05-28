@@ -157,6 +157,10 @@ Je peux lancer le setup pour Codex depuis le dépôt DiffDeck si tu me confirmes
 11. Mark the review ready for human review.
 12. End with a concise chat summary of the most important risks, uncertainties, and next steps.
 
+## Resetting A DiffDeck Session
+
+If the user explicitly asks to reset, clear, or restart the DiffDeck analysis session, use `reset_review` when available. Do not reset a session automatically before a normal review; ask first if the user's intent is ambiguous.
+
 ## Branch And Ticket Context
 
 Always keep the user oriented:

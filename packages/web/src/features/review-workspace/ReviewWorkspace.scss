@@ -35,6 +35,11 @@
     color: var(--dd-color-suggestion);
   }
 
+  &__context-button--danger {
+    border-color: rgba(255, 92, 122, 0.36);
+    color: var(--dd-color-critical);
+  }
+
   &__eyebrow {
     margin: 0 0 0.3rem;
     color: var(--dd-color-text-muted);
