@@ -57,6 +57,8 @@ export function ReviewSharePanel({ findings, isOpen, onClose, review }: ReviewSh
         aria-hidden={!isOpen}
         aria-label="Share approved review"
         className={`review-share-panel ${isOpen ? "review-share-panel--open" : ""}`}
+        hidden={!isOpen}
+        inert={!isOpen}
       >
         <header className="review-share-panel__header">
           <div>

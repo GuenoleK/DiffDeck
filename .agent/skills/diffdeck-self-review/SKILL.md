@@ -19,13 +19,14 @@ Review DiffDeck changes with the same human-in-the-loop workflow that DiffDeck p
 ## Workflow
 
 1. Identify source and target branch or diff scope.
-2. Ask for ticket/product context if it is not already provided.
-3. Use DiffDeck MCP when available.
-4. Set a concise review context via `set_review_context` when context exists.
-5. Push one structured finding per actionable review comment.
-6. Use exact file and line locations.
-7. Mark the review ready for human review.
-8. Summarize key risks, verification performed, and remaining uncertainty in chat.
+2. If no PR/MR exists yet, treat the task as a branch-to-branch review and compare the source branch against the explicit target branch.
+3. Ask for ticket/product context if it is not already provided.
+4. Use DiffDeck MCP when available.
+5. Set a concise review context via `set_review_context` when context exists.
+6. Push one structured finding per actionable review comment.
+7. Use exact file and line locations.
+8. Mark the review ready for human review.
+9. Summarize key risks, verification performed, and remaining uncertainty in chat.
 
 If DiffDeck MCP is unavailable, stop before the full review and explain that this repository is configured to review DiffDeck changes in DiffDeck. Offer MCP setup/restart first, then chat-only review as fallback.
 

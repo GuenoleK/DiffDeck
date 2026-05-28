@@ -38,10 +38,10 @@ Then add this note to the target project's shared agent/development instructions
 
 ```md
 DiffDeck:
-- Pour une revue IA, une analyse de MR/PR, branche ou diff, utiliser le skill `.agent/skills/diffdeck-code-review` par defaut, meme si l'utilisateur ne mentionne pas explicitement DiffDeck.
-- Pour preremplir des commentaires approuves dans GitLab/GitHub via navigateur, utiliser le skill `.agent/skills/diffdeck-browser-prefill`; l'agent doit recuperer la queue via `list_approved_findings` et utiliser le champ `suggestion` comme commentaire final edite par l'humain.
-- Si DiffDeck MCP n'est pas disponible, s'arreter avant l'analyse, proposer la configuration MCP comme prochaine etape principale, puis mentionner la revue chat seulement en fallback.
-- Si la configuration MCP impose de redemarrer l'outil IA, donner une phrase de reprise claire a completer avec la branche cible et le contexte, par exemple : "Analyse la MR <SOURCE> avec DiffDeck. Branche cible de la MR: <TARGET>. Contexte feature/corrections: <ticket, criteres d'acceptation, description metier ou connaissances utiles>."
+- For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
+- For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
+- If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
+- If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 ```
 
 For MCP setup, run this from the DiffDeck repository:
@@ -69,3 +69,11 @@ To only print the config:
 ```bash
 npm run setup:mcp:print
 ```
+
+DiffDeck can also be used before a platform MR/PR exists. Ask the agent to review a source branch against a target branch, for example:
+
+```text
+Review branch feature/dose-validation against dev with DiffDeck. Context: implements ticket DOSITL-337.
+```
+
+If the target branch is missing, the agent should ask for it before analyzing.

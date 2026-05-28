@@ -4,6 +4,8 @@ Use this file when an AI agent reviews a DiffDeck pull request, merge request, b
 
 This is intentionally separate from development instructions. Development instructions explain how to change DiffDeck. This file explains how to review DiffDeck changes using DiffDeck itself.
 
+DiffDeck reviews do not require a platform PR/MR. A source branch can be reviewed against an explicit target branch before the PR/MR exists.
+
 ## Default Review Flow
 
 For any DiffDeck review request:
@@ -17,6 +19,8 @@ For any DiffDeck review request:
    - push structured findings;
    - mark the review ready for human review.
 5. End with a concise chat summary of the biggest risks and any verification gaps.
+
+When no PR/MR exists yet, identify the source branch and target branch, then review the local git diff between them. If the target branch is missing or ambiguous, ask for it before analyzing.
 
 If DiffDeck MCP is not available, stop before doing the full review and explain how to configure or restart MCP. Continue with chat-only review only if the user explicitly accepts that fallback.
 

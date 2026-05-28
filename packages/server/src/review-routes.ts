@@ -6,7 +6,7 @@ import {
   ReviewPatchSchema,
   ReviewSessionSchema,
 } from "@diffdeck/core";
-import { isLocalRequestHost, openUrlInDefaultBrowser, parseOpenableUrl } from "./open-url.js";
+import { isLocalRequestHost, isTrustedOpenUrlRequest, openUrlInDefaultBrowser, parseOpenableUrl } from "./open-url.js";
 import { reviewStore } from "./review-store.memory.js";
 
 export const reviewRoutes = new Hono();
@@ -18,6 +18,10 @@ reviewRoutes.get("/health", (context) => {
 reviewRoutes.post("/system/open-url", async (context) => {
   if (!isLocalRequestHost(context.req.header("host"))) {
     return context.json({ error: "Opening URLs is only available from the local DiffDeck server" }, 403);
+  }
+
+  if (!isTrustedOpenUrlRequest(context.req.raw.headers)) {
+    return context.json({ error: "Opening URLs requires a trusted DiffDeck UI request" }, 403);
   }
 
   const body = await context.req.json().catch(() => ({}));

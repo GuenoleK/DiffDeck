@@ -33,10 +33,10 @@ DiffDeck supports only these browser publication modes:
 If the user asks to prefill or publish approved comments without specifying a mode, stop before opening any browser and ask the user to choose:
 
 ```text
-Quel mode veux-tu utiliser ?
-A. Piloter mon navigateur par défaut déjà connecté (nécessite Chrome DevTools MCP ou extension MCP attachée à cette session)
-B. Utiliser le navigateur intégré de l'outil IA (session séparée, connexion éventuelle à refaire)
-C. Me fournir les commentaires approuvés prêts à coller manuellement
+Which mode do you want to use?
+A. Pilot my already authenticated default browser (requires Chrome DevTools MCP or an extension MCP attached to this session)
+B. Use the AI tool's integrated browser (separate session, login may be required again)
+C. Provide approved comments ready to paste manually
 ```
 
 For option A, make the setup user-friendly: tell the user that Chrome 144 or newer is required, ask them to open `chrome://inspect/#remote-debugging`, enable remote debugging, accept the Chrome DevTools MCP access prompt when it appears, and retry mode A.

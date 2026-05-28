@@ -56,6 +56,8 @@ export function SessionHandoffPanel({ isOpen, onClose, onImport }: SessionHandof
         aria-hidden={!isOpen}
         aria-label="Session handoff"
         className={`session-handoff-panel ${isOpen ? "session-handoff-panel--open" : ""}`}
+        hidden={!isOpen}
+        inert={!isOpen}
       >
         <header className="session-handoff-panel__header">
           <div>

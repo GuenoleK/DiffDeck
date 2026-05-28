@@ -96,7 +96,10 @@ export async function getApprovedFindings(): Promise<Finding[]> {
 export async function openUrlInDefaultBrowser(url: string): Promise<void> {
   const response = await fetch(`${apiUrl}/system/open-url`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      "x-diffdeck-intent": "open-url",
+    },
     body: JSON.stringify({ url }),
   });
 

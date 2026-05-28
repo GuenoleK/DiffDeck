@@ -37,13 +37,13 @@ const formatLocation = (finding: Finding): string => {
 const getComment = (finding: Finding): string => finding.suggestion?.trim() || finding.explanation;
 
 export const createMarkdownReport = ({ findings, review }: ReviewReportInput): string => {
-  const lines = [`# ${review.title}`, "", `Commentaires approuves: ${findings.length}`, ""];
+  const lines = [`# ${review.title}`, "", `Approved comments: ${findings.length}`, ""];
 
   if (review.contextSummary?.trim()) {
-    lines.push("## Contexte", "", review.contextSummary.trim(), "");
+    lines.push("## Context", "", review.contextSummary.trim(), "");
   }
 
-  lines.push("## Commentaires", "");
+  lines.push("## Comments", "");
 
   findings.forEach((finding, index) => {
     lines.push(
@@ -211,14 +211,14 @@ export const createHtmlReport = ({ findings, review }: ReviewReportInput): strin
   <body>
     <main>
       <h1>${escapeHtml(review.title)}</h1>
-      <p class="summary">Commentaires approuves: ${findings.length}</p>
+      <p class="summary">Approved comments: ${findings.length}</p>
       ${
         context
-          ? `<section class="context"><h2>Contexte</h2>${formatHtmlText(context)}</section>`
+          ? `<section class="context"><h2>Context</h2>${formatHtmlText(context)}</section>`
           : ""
       }
       <section>
-        <h2>Commentaires</h2>
+        <h2>Comments</h2>
         ${findingSections}
       </section>
     </main>

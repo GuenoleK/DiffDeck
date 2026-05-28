@@ -17,11 +17,11 @@ When this skill is installed in a target project, treat common review requests a
 
 Examples:
 
-- "analyse la MR dositl-337"
-- "review cette PR"
-- "peux-tu relire cette branche ?"
-- "analyse le diff"
-- "prepare une revue sur ces changements"
+- "analyze MR dositl-337"
+- "review this PR"
+- "can you review this branch?"
+- "analyze the diff"
+- "prepare a review for these changes"
 
 If DiffDeck MCP is configured and available, use it.
 
@@ -85,7 +85,7 @@ Do not pretend that findings were pushed if MCP is unavailable.
 
 ## Missing MCP Behavior
 
-When the user asks for a review and DiffDeck MCP is not available, do this before analyzing the MR/PR/diff:
+When the user asks for a review and DiffDeck MCP is not available, do this before analyzing the MR/PR/branch/diff:
 
 1. Explain that this project is configured to use DiffDeck for AI-assisted reviews.
 2. Explain that the current AI session cannot see the DiffDeck MCP tools, so findings cannot be pushed to the dashboard yet.
@@ -101,18 +101,18 @@ When the user asks for a review and DiffDeck MCP is not available, do this befor
 Mandatory response shape:
 
 ```text
-Ce projet est configuré pour utiliser DiffDeck pour les revues IA, mais cette session ne voit pas les tools MCP DiffDeck. Je ne peux donc pas pousser les findings dans le dashboard pour l’instant.
+This project is configured to use DiffDeck for AI-assisted reviews, but this session cannot see the DiffDeck MCP tools. I cannot push findings to the dashboard yet.
 
-Je peux t’aider à configurer DiffDeck maintenant. Pour Codex, la commande prévue côté DiffDeck est :
-`cd <DIFFDECK_ROOT>` puis `npm run setup:mcp:codex`
+I can help configure DiffDeck now. For Codex, run this from the DiffDeck repository:
+`cd <DIFFDECK_ROOT>` then `npm run setup:mcp:codex`
 
-Si tu es dans le projet à relire, tu peux aussi lancer :
+If you are currently in the project to review, you can also run:
 `npm --prefix <DIFFDECK_ROOT> run setup:mcp:codex`
 
-Après la configuration, il faudra redémarrer Codex pour recharger les tools MCP, puis reprendre avec :
-"Analyse la MR <SOURCE> avec DiffDeck. Branche cible de la MR: <TARGET>. Contexte feature/corrections: <ticket, critères d'acceptation, description métier ou connaissances utiles>."
+After configuration, restart Codex so it reloads MCP tools, then resume with:
+"Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 
-Tu veux qu’on fasse la configuration MCP maintenant ? Si tu préfères, je peux aussi continuer en revue classique dans le chat, mais les findings ne seront pas envoyés dans DiffDeck.
+Do you want to configure MCP now? If you prefer, I can also continue with a chat-only review, but findings will not be sent to DiffDeck.
 ```
 
 Fill `<TARGET>` and the context when they are already known. If they are not known, leave explicit placeholders for the user to complete before restarting, instead of asking the future agent to ask again.
@@ -120,7 +120,7 @@ Fill `<TARGET>` and the context when they are already known. If they are not kno
 If the target branch is not known yet, use:
 
 ```text
-"Analyse la MR <SOURCE> avec DiffDeck. Branche cible de la MR: <BRANCHE_CIBLE_A_COMPLETER>. Contexte feature/corrections: <CONTEXTE_A_COMPLETER>."
+"Analyze <SOURCE> with DiffDeck. Target branch: <TARGET_BRANCH_TO_FILL>. Feature/fix context: <CONTEXT_TO_FILL>."
 ```
 
 If the DiffDeck repository path is unknown, ask for it before giving commands that require `cd`.
@@ -130,7 +130,7 @@ Do not ask the user to run `npm run setup:mcp:codex` from the target project unl
 If the current tool is Codex and shell access is available, the agent may offer:
 
 ```text
-Je peux lancer le setup pour Codex depuis le dépôt DiffDeck si tu me confirmes son emplacement, puis tu redémarreras Codex.
+I can run the Codex setup from the DiffDeck repository if you confirm its location, then you will restart Codex.
 ```
 
 ## Workflow
@@ -147,6 +147,7 @@ Je peux lancer le setup pour Codex depuis le dépôt DiffDeck si tu me confirmes
 4. Identify the target branch:
    - If a MR/PR URL is provided and the target can be read, tell the user which target branch was detected.
    - If only a source branch is provided and the target cannot be inferred safely, ask the user for the target branch before analyzing.
+   - If no MR/PR exists yet, review the local source branch against the explicit target branch.
    - If a project convention or explicit user context gives a target branch, state it before analyzing.
 5. Ask whether the user wants to provide ticket or business context before the review. If they provide it, use it and prepare a short functional summary for DiffDeck. If they decline or ask to proceed, continue without it and mention that the review is code-context-only.
 6. Inspect the diff, branch, pull request, merge request, or local changes.
@@ -165,14 +166,16 @@ If the user explicitly asks to reset, clear, or restart the DiffDeck analysis se
 
 Always keep the user oriented:
 
-- State the source branch or MR/PR being reviewed.
-- State the target branch before reviewing.
+- State the source branch, MR, PR, diff file, or local-change scope being reviewed.
+- State the target branch or target baseline before reviewing.
 - If the target branch is unknown, ask for it.
 - Ask whether the user wants to provide ticket information, acceptance criteria, or business context.
 
 Do not invent the target branch from a branch name alone. A branch named `feature-x` or `dositl-337` does not by itself prove the target branch.
 
 If the user gives a MR/PR link, use the link or available platform data to determine the target branch when possible.
+
+If no MR/PR link exists yet, treat the review as a branch-to-branch review. Use local git to compare the source branch against the target branch, and create a DiffDeck review title such as `Review <SOURCE> -> <TARGET>`.
 
 When ticket, acceptance criteria, business rules, or feature/correction context are available, summarize them in DiffDeck via `set_review_context`. Keep the summary useful for a human reviewer: expected behavior, important rules, assumptions, and out-of-scope points. Do not copy long ticket text verbatim.
 
@@ -188,7 +191,7 @@ If the user asks how to install or configure DiffDeck MCP in a target project:
 6. Explain that the AI tool usually needs to restart after MCP configuration changes.
 7. Do not edit unrelated AI tool config files manually if the setup assistant can handle it.
 
-If the user says something like "analyse la MR X" but MCP is not available:
+If the user says something like "analyze MR X" or "review this branch" but MCP is not available:
 
 1. Say that this project is configured to use DiffDeck for AI reviews.
 2. Say whether you can see DiffDeck MCP tools.

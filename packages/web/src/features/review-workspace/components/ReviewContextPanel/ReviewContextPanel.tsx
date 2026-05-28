@@ -43,6 +43,8 @@ export function ReviewContextPanel({ isOpen, onClose, onSave, review }: ReviewCo
         aria-hidden={!isOpen}
         aria-label="Review context"
         className={`review-context-panel ${isOpen ? "review-context-panel--open" : ""}`}
+        hidden={!isOpen}
+        inert={!isOpen}
       >
         <header className="review-context-panel__header">
           <div>

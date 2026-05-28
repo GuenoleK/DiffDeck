@@ -199,11 +199,6 @@ function writeMcpConfig(configPath: string, diffdeckConfig: unknown) {
 function writeCodexTomlConfig(configPath: string) {
   const existing = existsSync(configPath) ? readFileSync(configPath, "utf8") : "";
 
-  if (existing.includes("[mcp_servers.diffdeck]")) {
-    console.log("DiffDeck MCP already exists in this Codex config. No changes made.");
-    return;
-  }
-
   mkdirSync(dirname(configPath), { recursive: true });
 
   if (existsSync(configPath)) {
@@ -212,9 +207,37 @@ function writeCodexTomlConfig(configPath: string) {
     console.log(`Backup created at ${backupPath}`);
   }
 
-  const nextConfig = `${existing.trimEnd()}
+  const nextConfig = appendCodexDiffDeckConfig(removeCodexDiffDeckConfig(existing));
 
-[mcp_servers.diffdeck]
+  writeFileSync(configPath, `${nextConfig.trimStart()}\n`);
+}
+
+function removeCodexDiffDeckConfig(config: string): string {
+  const lines = config.split(/\r?\n/);
+  const keptLines: string[] = [];
+  let isSkippingDiffDeckSection = false;
+
+  lines.forEach((line) => {
+    const sectionMatch = line.match(/^\s*\[([^\]]+)\]\s*$/);
+
+    if (sectionMatch) {
+      const sectionName = sectionMatch[1]?.trim() ?? "";
+      isSkippingDiffDeckSection =
+        sectionName === "mcp_servers.diffdeck" || sectionName.startsWith("mcp_servers.diffdeck.");
+    }
+
+    if (!isSkippingDiffDeckSection) {
+      keptLines.push(line);
+    }
+  });
+
+  return keptLines.join("\n").trimEnd();
+}
+
+function appendCodexDiffDeckConfig(existing: string): string {
+  const separator = existing ? "\n\n" : "";
+
+  return `${existing}${separator}[mcp_servers.diffdeck]
 command = "node"
 args = [${JSON.stringify(mcpEntryPoint)}]
 startup_timeout_sec = 120
@@ -222,8 +245,6 @@ startup_timeout_sec = 120
 [mcp_servers.diffdeck.env]
 DIFFDECK_API_URL = ${JSON.stringify(defaultApiUrl)}
 `;
-
-  writeFileSync(configPath, `${nextConfig.trimStart()}\n`);
 }
 
 function readExistingConfig(configPath: string): McpConfig {
