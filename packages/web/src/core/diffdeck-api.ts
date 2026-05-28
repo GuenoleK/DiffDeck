@@ -1,9 +1,45 @@
-import type { Finding, FindingPatchInput, ReviewSnapshot } from "@diffdeck/core";
+import type {
+  Finding,
+  FindingPatchInput,
+  Review,
+  ReviewPatchInput,
+  ReviewSession,
+  ReviewSnapshot,
+} from "@diffdeck/core";
 
 const apiUrl = "/api";
 
 export async function getActiveReview(): Promise<ReviewSnapshot> {
   const response = await fetch(`${apiUrl}/reviews/active`);
+  return response.json();
+}
+
+export async function getActiveReviewSession(): Promise<ReviewSession> {
+  const response = await fetch(`${apiUrl}/reviews/active/session`);
+
+  if (response.ok) {
+    return response.json();
+  }
+
+  const snapshot = await getActiveReview();
+  return {
+    format: "diffdeck.session.v1",
+    exportedAt: new Date().toISOString(),
+    snapshot,
+  };
+}
+
+export async function importReviewSession(session: ReviewSession): Promise<ReviewSnapshot> {
+  const response = await fetch(`${apiUrl}/reviews/session`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(session),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to import review session");
+  }
+
   return response.json();
 }
 
@@ -19,4 +55,40 @@ export async function updateFinding(findingId: string, patch: FindingPatchInput)
   }
 
   return response.json();
+}
+
+export async function updateActiveReview(patch: ReviewPatchInput): Promise<Review> {
+  const response = await fetch(`${apiUrl}/reviews/active`, {
+    method: "PATCH",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to update active review");
+  }
+
+  return response.json();
+}
+
+export async function getApprovedFindings(): Promise<Finding[]> {
+  const response = await fetch(`${apiUrl}/reviews/active/approved-findings`);
+
+  if (!response.ok) {
+    throw new Error("Unable to load approved findings");
+  }
+
+  return response.json();
+}
+
+export async function openUrlInDefaultBrowser(url: string): Promise<void> {
+  const response = await fetch(`${apiUrl}/system/open-url`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Unable to open URL in the default browser");
+  }
 }

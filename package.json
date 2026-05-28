@@ -12,6 +12,9 @@
     "dev:mcp": "npm run dev -w @diffdeck/mcp",
     "start:server": "node packages/server/dist/index.js",
     "start:mcp": "node packages/mcp/dist/index.js",
+    "setup:mcp": "npm run build -w @diffdeck/mcp && npm run build -w @diffdeck/cli && node packages/cli/dist/index.js setup-mcp",
+    "setup:mcp:print": "npm run build -w @diffdeck/mcp && npm run build -w @diffdeck/cli && node packages/cli/dist/index.js setup-mcp --print",
+    "setup:mcp:codex": "npm run build -w @diffdeck/mcp && npm run build -w @diffdeck/cli && node packages/cli/dist/index.js setup-mcp --target codex",
     "build": "npm run build -w @diffdeck/core && npm run build -w @diffdeck/server && npm run build -w @diffdeck/mcp && npm run build -w @diffdeck/cli && npm run build -w @diffdeck/web",
     "typecheck": "npm run build -w @diffdeck/core && npm run build -w @diffdeck/server && npm run typecheck --workspaces --if-present"
   },

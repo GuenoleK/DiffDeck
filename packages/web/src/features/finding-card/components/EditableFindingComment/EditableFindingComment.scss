@@ -1,0 +1,50 @@
+.editable-finding-comment {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid var(--dd-color-border);
+  border-radius: 6px;
+  padding: 0.85rem;
+  background: rgba(9, 11, 16, 0.46);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__label {
+    color: var(--dd-color-text-muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  &__state {
+    color: var(--dd-color-suggestion);
+    font-size: 0.82rem;
+  }
+
+  &__textarea {
+    min-height: 7.5rem;
+    resize: vertical;
+    border: 1px solid var(--dd-color-border);
+    border-radius: 6px;
+    padding: 0.85rem;
+    color: var(--dd-color-text);
+    background: rgba(3, 6, 12, 0.72);
+    font: inherit;
+    line-height: 1.55;
+
+    &:focus {
+      outline: 2px solid rgba(83, 124, 255, 0.4);
+      outline-offset: 2px;
+      border-color: #537cff;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+}

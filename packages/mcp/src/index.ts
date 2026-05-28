@@ -68,11 +68,37 @@ server.tool(
 );
 
 server.tool(
+  "set_review_context",
+  "Set a concise functional or ticket context summary for the active DiffDeck review.",
+  {
+    contextSummary: z.string().min(1),
+  },
+  async (input) => {
+    const review = await client.updateReviewContext({ contextSummary: input.contextSummary });
+    return {
+      content: [{ type: "text", text: JSON.stringify(review, null, 2) }],
+    };
+  },
+);
+
+server.tool(
   "list_findings",
   "List findings currently stored in the active DiffDeck review.",
   {},
   async () => {
     const findings = await client.listFindings();
+    return {
+      content: [{ type: "text", text: JSON.stringify(findings, null, 2) }],
+    };
+  },
+);
+
+server.tool(
+  "list_approved_findings",
+  "List human-approved DiffDeck findings that are ready to be prefilled in a code review platform.",
+  {},
+  async () => {
+    const findings = await client.listApprovedFindings();
     return {
       content: [{ type: "text", text: JSON.stringify(findings, null, 2) }],
     };

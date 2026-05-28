@@ -18,3 +18,4 @@ Read these files before changing the application:
 - Do not introduce Tailwind.
 - Prefer small, focused components and helpers over large files.
 - Keep durable instructions here instead of duplicating them in agent-specific files.
+- Do not publish personal local paths, secrets, tokens, private URLs, or sensitive environment values in docs, snippets, or examples.

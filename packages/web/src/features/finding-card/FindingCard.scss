@@ -32,24 +32,9 @@
     padding: 0 1rem 1rem;
   }
 
-  &__explanation,
-  &__suggestion-text {
+  &__explanation {
     margin: 0;
     color: var(--dd-color-text);
     line-height: 1.6;
-  }
-
-  &__suggestion {
-    border: 1px solid var(--dd-color-border);
-    border-radius: 6px;
-    padding: 0.85rem;
-    background: rgba(9, 11, 16, 0.46);
-  }
-
-  &__section-title {
-    margin: 0 0 0.45rem;
-    color: var(--dd-color-text-muted);
-    font-size: 0.82rem;
-    text-transform: uppercase;
   }
 }

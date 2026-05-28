@@ -10,6 +10,11 @@
     background: rgba(255, 255, 255, 0.04);
   }
 
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
   &--primary {
     border-color: #537cff;
     background: #537cff;

@@ -17,4 +17,33 @@
     justify-content: flex-end;
     gap: 0.5rem;
   }
+
+  &__button {
+    transition:
+      border-color 120ms ease,
+      box-shadow 120ms ease,
+      color 120ms ease,
+      background 120ms ease;
+  }
+
+  &__button--active {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+  }
+
+  &__button--approved.finding-actions__button--active {
+    border-color: var(--dd-color-praise);
+    background: rgba(82, 224, 139, 0.18);
+  }
+
+  &__button--rejected.finding-actions__button--active {
+    border-color: var(--dd-color-critical);
+    color: var(--dd-color-critical);
+    background: rgba(255, 94, 123, 0.14);
+  }
+
+  &__button--resolved.finding-actions__button--active {
+    border-color: var(--dd-color-suggestion);
+    color: var(--dd-color-suggestion);
+    background: rgba(124, 199, 255, 0.14);
+  }
 }

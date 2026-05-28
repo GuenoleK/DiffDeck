@@ -6,9 +6,12 @@ type ReviewSummaryProps = {
 };
 
 export function ReviewSummary({ snapshot }: ReviewSummaryProps) {
+  const approvedCount = snapshot.findings.filter((finding) => finding.status === "approved").length;
+
   return (
     <aside className="review-summary" aria-label="Review summary">
       <span className="review-summary__item">{snapshot.findings.length} findings</span>
+      <span className="review-summary__item">{approvedCount} approved</span>
       <span className="review-summary__item review-summary__item--status">{snapshot.review.status}</span>
     </aside>
   );

@@ -7,10 +7,12 @@
   &__item {
     border: 1px solid var(--dd-color-border);
     border-radius: 999px;
+    min-width: 6.8rem;
     padding: 0.35rem 0.65rem;
     color: var(--dd-color-text-muted);
     background: rgba(17, 22, 32, 0.78);
     font-size: 0.85rem;
+    text-align: center;
   }
 
   &__item--status {
