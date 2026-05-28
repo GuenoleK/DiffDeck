@@ -299,6 +299,8 @@ DiffDeck can:
 All agent-facing instructions are centralized in `.agent/instructions`.
 Root files such as `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` only point to that source of truth.
 
+For reviewing DiffDeck changes with DiffDeck itself, agents should read `.agent/instructions/reviewing-diffdeck.md` and use `.agent/skills/diffdeck-self-review`.
+
 ## Skills To Install In Target Projects
 
 DiffDeck provides reusable skills that are meant to be copied into projects that want to use DiffDeck.

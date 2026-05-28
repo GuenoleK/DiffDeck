@@ -8,6 +8,10 @@ Read these files before changing the application:
 4. `frontend.md`
 5. `mcp-workflow.md`
 
+For reviewing a DiffDeck PR/MR/branch/diff with DiffDeck, also read:
+
+- `reviewing-diffdeck.md`
+
 ## Non-Negotiables
 
 - DiffDeck is agent-agnostic: Codex, Claude, Gemini, and other tools should be able to use it.
