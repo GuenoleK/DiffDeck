@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type {
+  ConversationMessageDraftInput,
   CreateReviewInput,
   FindingDraftInput,
   FindingPatchInput,
@@ -7,13 +8,14 @@ import type {
   ReviewSessionInput,
   ReviewPatchInput,
 } from "@diffdeck/core";
-import type { Finding, Review, ReviewSnapshot } from "@diffdeck/core";
+import type { Finding, Review, ReviewConversationMessage, ReviewSnapshot } from "@diffdeck/core";
 
 const nowIso = () => new Date().toISOString();
 
 export class MemoryReviewStore {
   private activeReview: Review | undefined;
   private findings = new Map<string, Finding>();
+  private conversation = new Map<string, ReviewConversationMessage>();
 
   getOrCreateActiveReview(): Review {
     if (this.activeReview) {
@@ -38,6 +40,7 @@ export class MemoryReviewStore {
 
     this.activeReview = review;
     this.findings.clear();
+    this.conversation.clear();
     return review;
   }
 
@@ -105,6 +108,39 @@ export class MemoryReviewStore {
     return this.findings.delete(findingId);
   }
 
+  addConversationMessage(input: ConversationMessageDraftInput): ReviewConversationMessage {
+    const review = this.getOrCreateActiveReview();
+    const message: ReviewConversationMessage = {
+      ...input,
+      id: randomUUID(),
+      reviewId: review.id,
+      createdAt: nowIso(),
+    };
+
+    this.conversation.set(message.id, message);
+    return message;
+  }
+
+  listConversationMessages(): ReviewConversationMessage[] {
+    return [...this.conversation.values()].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  }
+
+  listPendingConversationMessages(): ReviewConversationMessage[] {
+    const messages = this.listConversationMessages();
+    const answeredMessageIds = new Set(
+      messages
+        .filter((message) => message.role === "agent" && message.relatedMessageId)
+        .map((message) => message.relatedMessageId),
+    );
+
+    return messages.filter((message) => message.role === "human" && !answeredMessageIds.has(message.id));
+  }
+
+  clearConversation(): ReviewSnapshot {
+    this.conversation.clear();
+    return this.snapshot();
+  }
+
   exportSession(): ReviewSession {
     return {
       format: "diffdeck.session.v1",
@@ -119,16 +155,23 @@ export class MemoryReviewStore {
       ...finding,
       reviewId: review.id,
     }));
+    const conversation = session.snapshot.conversation.map((message) => ({
+      ...message,
+      reviewId: review.id,
+    }));
 
     this.activeReview = review;
     this.findings.clear();
+    this.conversation.clear();
     findings.forEach((finding) => this.findings.set(finding.id, finding));
+    conversation.forEach((message) => this.conversation.set(message.id, message));
     return this.snapshot();
   }
 
   reset(): ReviewSnapshot {
     this.activeReview = undefined;
     this.findings.clear();
+    this.conversation.clear();
     return this.snapshot();
   }
 
@@ -136,6 +179,7 @@ export class MemoryReviewStore {
     return {
       review: this.getOrCreateActiveReview(),
       findings: this.listFindings(),
+      conversation: this.listConversationMessages(),
     };
   }
 }

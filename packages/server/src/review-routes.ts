@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import {
+  ConversationMessageDraftSchema,
   CreateReviewSchema,
   FindingDraftSchema,
   FindingPatchSchema,
@@ -10,6 +11,10 @@ import { isLocalRequestHost, isTrustedOpenUrlRequest, openUrlInDefaultBrowser, p
 import { reviewStore } from "./review-store.memory.js";
 
 export const reviewRoutes = new Hono();
+
+function logConversation(event: string, details: Record<string, unknown> = {}) {
+  console.info(`[DiffDeck conversation] ${event}`, details);
+}
 
 reviewRoutes.get("/health", (context) => {
   return context.json({ ok: true, service: "diffdeck-server" });
@@ -76,6 +81,46 @@ reviewRoutes.get("/reviews/active/findings", (context) => {
 
 reviewRoutes.get("/reviews/active/approved-findings", (context) => {
   return context.json(reviewStore.listApprovedFindings());
+});
+
+reviewRoutes.get("/reviews/active/conversation", (context) => {
+  const messages = reviewStore.listConversationMessages();
+  logConversation("list", {
+    count: messages.length,
+    pendingHuman: messages.at(-1)?.role === "human",
+  });
+  return context.json(messages);
+});
+
+reviewRoutes.get("/reviews/active/conversation/pending", (context) => {
+  const messages = reviewStore.listPendingConversationMessages();
+  logConversation("pending", {
+    count: messages.length,
+    latestId: messages.at(-1)?.id,
+  });
+  return context.json(messages);
+});
+
+reviewRoutes.post("/reviews/active/conversation", async (context) => {
+  const body = await context.req.json();
+  const input = ConversationMessageDraftSchema.parse(body);
+  const message = reviewStore.addConversationMessage(input);
+  logConversation("add", {
+    id: message.id,
+    role: message.role,
+    isReviewAttached: message.isReviewAttached,
+    relatedFindingId: message.relatedFindingId,
+    relatedMessageId: message.relatedMessageId,
+    bodyLength: message.body.length,
+  });
+  return context.json(message, 201);
+});
+
+reviewRoutes.delete("/reviews/active/conversation", (context) => {
+  const previousCount = reviewStore.listConversationMessages().length;
+  const snapshot = reviewStore.clearConversation();
+  logConversation("clear", { previousCount });
+  return context.json(snapshot);
 });
 
 reviewRoutes.post("/reviews/active/findings", async (context) => {

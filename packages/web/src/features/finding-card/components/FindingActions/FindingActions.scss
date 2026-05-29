@@ -40,6 +40,12 @@
     box-shadow: inset 0 -1px 0 currentColor;
   }
 
+  &__button--ask.finding-actions__button--active {
+    border-color: rgba(119, 184, 166, 0.46);
+    color: #a8ddce;
+    background: rgba(119, 184, 166, 0.1);
+  }
+
   &__button--approved.finding-actions__button--active {
     border-color: var(--dd-color-praise);
     background: transparent;

@@ -38,3 +38,11 @@ Each finding should include:
 ## Human Control
 
 Never publish comments to GitLab, GitHub, Bitbucket, or another platform without explicit user approval. Preparing or pre-filling draft comments is allowed when the user asks for it.
+
+## Conversation Follow-Up
+
+When the user asks to answer or continue a DiffDeck UI conversation, use MCP conversation tools instead of answering only in chat:
+
+- Use `list_pending_conversation` for one-shot unanswered UI questions.
+- Use `wait_for_conversation_message` when the user asks to watch the UI chat.
+- Reply with `add_conversation_reply`, preserving review attachment and setting `relatedMessageId` when answering a specific human message.

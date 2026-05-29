@@ -3,11 +3,13 @@ import { Button } from "../../../../shared/components/Button/Button.js";
 import "./FindingActions.scss";
 
 type FindingActionsProps = {
+  isConversationTarget?: boolean;
+  onAskAboutFinding: () => void;
   status: FindingStatus;
   onStatusChange: (status: FindingStatus) => Promise<void>;
 };
 
-export function FindingActions({ status, onStatusChange }: FindingActionsProps) {
+export function FindingActions({ isConversationTarget = false, onAskAboutFinding, status, onStatusChange }: FindingActionsProps) {
   const actionClassName = (targetStatus: FindingStatus) =>
     `finding-actions__button finding-actions__button--${targetStatus} ${
       status === targetStatus ? "finding-actions__button--active" : ""
@@ -17,6 +19,15 @@ export function FindingActions({ status, onStatusChange }: FindingActionsProps) 
     <footer className="finding-actions">
       <span className="finding-actions__status">Status: {status}</span>
       <div className="finding-actions__buttons">
+        <Button
+          aria-pressed={isConversationTarget}
+          className={`finding-actions__button finding-actions__button--ask ${
+            isConversationTarget ? "finding-actions__button--active" : ""
+          }`}
+          onClick={onAskAboutFinding}
+        >
+          Ask AI
+        </Button>
         <Button
           aria-pressed={status === "approved"}
           className={actionClassName("approved")}

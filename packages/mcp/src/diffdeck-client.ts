@@ -1,4 +1,4 @@
-import type { FindingDraftInput } from "@diffdeck/core";
+import type { FindingDraftInput, ReviewConversationMessage } from "@diffdeck/core";
 
 const defaultBaseUrl = "http://127.0.0.1:4337/api";
 
@@ -26,17 +26,46 @@ export class DiffDeckClient {
   }
 
   async listFindings() {
-    const response = await fetch(`${this.baseUrl}/reviews/active/findings`);
-    return response.json();
+    return this.get("/reviews/active/findings");
   }
 
   async listApprovedFindings() {
-    const response = await fetch(`${this.baseUrl}/reviews/active/approved-findings`);
-    return response.json();
+    return this.get("/reviews/active/approved-findings");
+  }
+
+  async listConversationMessages() {
+    return this.get("/reviews/active/conversation");
+  }
+
+  async listPendingConversationMessages(): Promise<ReviewConversationMessage[]> {
+    return this.get("/reviews/active/conversation/pending");
+  }
+
+  async addConversationReply(input: {
+    body: string;
+    isReviewAttached?: boolean;
+    relatedMessageId?: string;
+    relatedFindingId?: string;
+    agentName?: string;
+  }) {
+    return this.post("/reviews/active/conversation", {
+      ...input,
+      role: "agent",
+    });
   }
 
   async markReadyForHumanReview() {
     return this.post("/reviews/active/ready", {});
+  }
+
+  private async get(path: string) {
+    const response = await fetch(`${this.baseUrl}${path}`);
+
+    if (!response.ok) {
+      throw new Error(`DiffDeck API error ${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
   }
 
   private async post(path: string, body: unknown) {

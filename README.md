@@ -196,7 +196,18 @@ Available MCP tools:
 - `add_finding`
 - `list_findings`
 - `list_approved_findings`
+- `list_conversation`
+- `list_pending_conversation`
+- `wait_for_conversation_message`
+- `add_conversation_reply`
 - `mark_ready_for_human_review`
+
+Conversation tools:
+
+- `list_conversation`: read the full local conversation history.
+- `list_pending_conversation`: read human UI messages that do not have an agent reply yet.
+- `wait_for_conversation_message`: poll DiffDeck for a pending human UI message and return when one arrives.
+- `add_conversation_reply`: send the agent's answer back into the UI conversation.
 
 ## Review A Branch Before A PR Or MR Exists
 
@@ -228,11 +239,29 @@ The MVP stores data in memory. Before stopping the API server, use the `Session`
 Use the `Session` button in the review header when you want to hand off or resume a review:
 
 1. Click `Session`.
-2. Click `Copy current` to copy the current review, context summary, findings, comments, and statuses.
+2. Click `Copy current` to copy the current review, context summary, findings, conversation, comments, and statuses.
 3. Keep the copied `diffdeck.session.v1` text wherever you need to resume from.
 4. Later, paste the text into the same panel and click `Restore`.
 
 This is a copy/paste safety net for the in-memory MVP. It is not a secret store, so do not put tokens, passwords, API keys, or sensitive environment values in findings or context summaries.
+
+## Ask The Agent From The UI
+
+Use the conversation block in the main workspace to chat with the agent from DiffDeck. Each message stays local and can be attached to the active review, scoped to a specific finding, or detached when the conversation is not about the current review.
+
+An AI tool that has the DiffDeck MCP server configured can then call `list_conversation`, answer with its own model subscription and project context, and push the reply back with `add_conversation_reply`. Replies should preserve `isReviewAttached` when they answer an attached review question. DiffDeck does not call an AI provider directly.
+
+The chat is therefore a local inbox for connected agents, not an automatic hosted chatbot. To get answers:
+
+1. Start the DiffDeck API.
+2. Configure the AI tool with DiffDeck MCP, for example `npm run setup:mcp:codex`.
+3. Restart the AI tool if the MCP configuration changed.
+4. Ask that agent to watch the DiffDeck conversation, for example: `Start watching DiffDeck chat: call wait_for_conversation_message, answer the pending human question, then add the reply with add_conversation_reply. Repeat until I ask you to stop.`
+
+When the agent answers, the reply is added to the same UI conversation through `add_conversation_reply`.
+
+For a one-shot reply, ask the agent to use `list_pending_conversation` and then `add_conversation_reply`.
+For a live session, ask the agent to loop on `wait_for_conversation_message`, answer the returned message, and then call `add_conversation_reply`.
 
 ## Reset A Session
 
@@ -299,6 +328,8 @@ distributed/
       SKILL.md
     diffdeck-browser-prefill/
       SKILL.md
+    diffdeck-sync-distributed/
+      SKILL.md
   snippets/
     AGENTS.md
     CLAUDE.md
@@ -333,15 +364,26 @@ Typical prompt:
 Prefill the approved DiffDeck comments on this GitLab merge request, but do not publish them.
 ```
 
+`diffdeck-sync-distributed`
+
+Use this when a target project should install or update DiffDeck distributed skills and snippets from a local DiffDeck repository. The bundled sync script copies skills into `.agent/skills`, stores snippets in `.agent/diffdeck/snippets`, and keeps a manifest so local edits are not overwritten silently.
+
+Typical prompt:
+
+```text
+Sync the DiffDeck distributed skills into this project from C:\path\to\DiffDeck.
+```
+
 ### Install The Skills In A Target Project
 
 In the target project, create a `.agent/skills` folder if it does not exist.
 
-Then copy these two folders from DiffDeck:
+Then copy these folders from DiffDeck:
 
 ```text
 <DIFFDECK_ROOT>\distributed\skills\diffdeck-code-review
 <DIFFDECK_ROOT>\distributed\skills\diffdeck-browser-prefill
+<DIFFDECK_ROOT>\distributed\skills\diffdeck-sync-distributed
 ```
 
 Paste them into the target project here:
@@ -360,6 +402,8 @@ target-project/
         SKILL.md
       diffdeck-browser-prefill/
         SKILL.md
+      diffdeck-sync-distributed/
+        SKILL.md
 ```
 
 ### Add A Short Agent Entry Point In The Target Project
@@ -372,6 +416,8 @@ For example:
 DiffDeck:
 - For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
 - For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
+- For installing or updating DiffDeck distributed skills and snippets in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
+- For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 ```
@@ -383,6 +429,24 @@ If the project does not have agent entry files yet, use the examples in:
 ```
 
 Keep these files short. Project-specific rules should stay in the target project. DiffDeck skills only teach the AI how to use DiffDeck.
+
+### Sync Distributed Updates Later
+
+After the first manual copy, use `diffdeck-sync-distributed` from the target project to refresh DiffDeck distributed assets.
+
+Dry-run:
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT> --dry-run
+```
+
+Apply non-conflicting updates:
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT>
+```
+
+The script writes `.agent/diffdeck/sync-manifest.json` and skips files changed locally since the previous sync. Use `--force` only when overwriting local edits is intentional.
 
 ## Expected User Flow In A Target Project
 

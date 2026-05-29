@@ -70,9 +70,25 @@ export const FindingSchema = FindingDraftSchema.extend({
   updatedAt: z.string().min(1),
 });
 
+export const ConversationMessageDraftSchema = z.object({
+  role: z.enum(["human", "agent"]),
+  body: z.string().min(1),
+  isReviewAttached: z.boolean().default(true),
+  relatedMessageId: z.string().min(1).optional(),
+  relatedFindingId: z.string().min(1).optional(),
+  agentName: z.string().optional(),
+});
+
+export const ConversationMessageSchema = ConversationMessageDraftSchema.extend({
+  id: z.string().min(1),
+  reviewId: z.string().min(1),
+  createdAt: z.string().min(1),
+});
+
 export const ReviewSnapshotSchema = z.object({
   review: ReviewSchema,
   findings: z.array(FindingSchema),
+  conversation: z.array(ConversationMessageSchema).default([]),
 });
 
 export const ReviewSessionSchema = z.object({
@@ -85,4 +101,5 @@ export type CreateReviewInput = z.infer<typeof CreateReviewSchema>;
 export type ReviewPatchInput = z.infer<typeof ReviewPatchSchema>;
 export type FindingDraftInput = z.infer<typeof FindingDraftSchema>;
 export type FindingPatchInput = z.infer<typeof FindingPatchSchema>;
+export type ConversationMessageDraftInput = z.infer<typeof ConversationMessageDraftSchema>;
 export type ReviewSessionInput = z.infer<typeof ReviewSessionSchema>;

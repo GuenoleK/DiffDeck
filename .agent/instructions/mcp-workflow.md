@@ -22,6 +22,10 @@ Initial tools:
 - `add_finding`
 - `list_findings`
 - `list_approved_findings`
+- `list_conversation`
+- `list_pending_conversation`
+- `wait_for_conversation_message`
+- `add_conversation_reply`
 - `mark_ready_for_human_review`
 
 Future tools:
@@ -35,6 +39,12 @@ Browser MCP may open a GitLab/GitHub/Bitbucket merge request and prefill comment
 Publication agents should use `list_approved_findings` and treat each finding `suggestion` as the human-edited final comment body.
 
 Use `reset_review` only when the user explicitly asks to reset, clear, or restart the DiffDeck analysis session. Do not reset as part of a normal review update.
+
+## Review Conversation
+
+The UI can add human questions to the session conversation. Questions can be attached to the active review or detached from it. Agents should use `list_conversation` when the user asks them to answer or continue from DiffDeck, then write the answer back with `add_conversation_reply` so the human can stay in the UI. Preserve `isReviewAttached` when answering an attached review question, and use `relatedMessageId` or `relatedFindingId` when a response targets a specific question or finding.
+
+DiffDeck does not wake an agent by itself. A running AI tool must be connected to the DiffDeck MCP server and must be asked to check or watch the conversation. For a one-shot answer, use `list_pending_conversation` or `list_conversation`, then answer with `add_conversation_reply`. For an explicit watcher mode, call `wait_for_conversation_message`, answer the returned pending human message with `add_conversation_reply`, then repeat until the user asks to stop. If MCP configuration changed, the AI tool usually needs a restart so it reloads the MCP server.
 
 Supported browser publication modes are limited to:
 

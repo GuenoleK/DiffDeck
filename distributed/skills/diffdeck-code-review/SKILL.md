@@ -158,6 +158,29 @@ I can run the Codex setup from the DiffDeck repository if you confirm its locati
 11. Mark the review ready for human review.
 12. End with a concise chat summary of the most important risks, uncertainties, and next steps.
 
+## Conversation Follow-Up
+
+If the user asks you to answer a question from DiffDeck, continue a DiffDeck conversation, or respond in the UI:
+
+1. Prefer `list_pending_conversation` to find human UI messages that do not have an agent reply yet.
+2. If the user refers to a specific older message, use `list_conversation` to read the full conversation history.
+3. Identify the latest unanswered human question, or the specific question the user named.
+4. Use the active project context and your own available tools to answer.
+5. Call `add_conversation_reply` with a concise answer. Preserve `isReviewAttached` when answering an attached review question. Set `relatedMessageId` to the human message id and `relatedFindingId` when the answer is about a specific finding.
+6. Summarize briefly in chat that the answer was sent to DiffDeck.
+
+If the user asks you to watch the DiffDeck chat, stay connected, or answer UI messages as they arrive:
+
+1. Call `wait_for_conversation_message`.
+2. If it returns a pending human message, answer it using project context.
+3. Call `add_conversation_reply` with `relatedMessageId` set to that human message id.
+4. Repeat `wait_for_conversation_message` until the user asks you to stop or the tool times out repeatedly.
+5. If the watcher times out, say that no pending DiffDeck UI message arrived during the watch window and ask whether to continue watching.
+
+The watcher is explicit: DiffDeck stores UI messages locally, but it does not wake an AI provider by itself. A connected agent must be running and using the MCP conversation tools.
+
+Do not call an AI provider from DiffDeck directly; the current AI tool is responsible for reasoning with its configured model and subscriptions.
+
 ## Resetting A DiffDeck Session
 
 If the user explicitly asks to reset, clear, or restart the DiffDeck analysis session, use `reset_review` when available. Do not reset a session automatically before a normal review; ask first if the user's intent is ambiguous.

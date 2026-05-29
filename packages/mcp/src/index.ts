@@ -5,6 +5,16 @@ import { DiffDeckClient } from "./diffdeck-client.js";
 
 const client = new DiffDeckClient();
 
+function logMcpConversation(event: string, details: Record<string, unknown> = {}) {
+  console.error(`[DiffDeck MCP conversation] ${event}`, details);
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 const server = new McpServer({
   name: "diffdeck",
   version: "0.1.0",
@@ -114,6 +124,160 @@ server.tool(
     return {
       content: [{ type: "text", text: JSON.stringify(findings, null, 2) }],
     };
+  },
+);
+
+server.tool(
+  "list_conversation",
+  "List the active DiffDeck review conversation, including human questions from the UI and agent replies.",
+  {},
+  async () => {
+    logMcpConversation("list_conversation:start");
+    try {
+      const messages = await client.listConversationMessages();
+      logMcpConversation("list_conversation:ok", {
+        count: Array.isArray(messages) ? messages.length : undefined,
+        pendingHuman: Array.isArray(messages) ? messages.at(-1)?.role === "human" : undefined,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(messages, null, 2) }],
+      };
+    } catch (error) {
+      logMcpConversation("list_conversation:error", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  },
+);
+
+server.tool(
+  "list_pending_conversation",
+  "List human DiffDeck UI messages that do not have an agent reply yet.",
+  {},
+  async () => {
+    logMcpConversation("list_pending_conversation:start");
+    try {
+      const messages = await client.listPendingConversationMessages();
+      logMcpConversation("list_pending_conversation:ok", {
+        count: messages.length,
+        latestId: messages.at(-1)?.id,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(messages, null, 2) }],
+      };
+    } catch (error) {
+      logMcpConversation("list_pending_conversation:error", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  },
+);
+
+server.tool(
+  "wait_for_conversation_message",
+  "Watch DiffDeck for a pending human UI message and return it when one arrives. Use this to keep an agent connected to the DiffDeck chat.",
+  {
+    timeoutSeconds: z.number().int().min(1).max(300).optional(),
+    pollIntervalMs: z.number().int().min(250).max(10000).optional(),
+  },
+  async (input) => {
+    const timeoutMs = (input.timeoutSeconds ?? 60) * 1000;
+    const pollIntervalMs = input.pollIntervalMs ?? 1000;
+    const startedAt = Date.now();
+
+    logMcpConversation("wait_for_conversation_message:start", {
+      timeoutSeconds: input.timeoutSeconds ?? 60,
+      pollIntervalMs,
+    });
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const messages = await client.listPendingConversationMessages();
+      const latestMessage = messages.at(-1);
+
+      if (latestMessage) {
+        logMcpConversation("wait_for_conversation_message:message", {
+          id: latestMessage.id,
+          pendingCount: messages.length,
+          isReviewAttached: latestMessage.isReviewAttached,
+          relatedFindingId: latestMessage.relatedFindingId,
+        });
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(
+                {
+                  timedOut: false,
+                  pendingCount: messages.length,
+                  message: latestMessage,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
+        };
+      }
+
+      await sleep(pollIntervalMs);
+    }
+
+    logMcpConversation("wait_for_conversation_message:timeout", {
+      timeoutSeconds: input.timeoutSeconds ?? 60,
+    });
+    return {
+      content: [
+        {
+          type: "text",
+          text: JSON.stringify(
+            {
+              timedOut: true,
+              pendingCount: 0,
+              message: null,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  },
+);
+
+server.tool(
+  "add_conversation_reply",
+  "Add an agent reply to the active DiffDeck review conversation so the human can read it in the UI.",
+  {
+    body: z.string().min(1),
+    isReviewAttached: z.boolean().optional(),
+    relatedMessageId: z.string().optional(),
+    relatedFindingId: z.string().optional(),
+    agentName: z.string().optional(),
+  },
+  async (input) => {
+    logMcpConversation("add_conversation_reply:start", {
+      isReviewAttached: input.isReviewAttached,
+      relatedFindingId: input.relatedFindingId,
+      relatedMessageId: input.relatedMessageId,
+      bodyLength: input.body.length,
+    });
+    try {
+      const message = await client.addConversationReply(input);
+      logMcpConversation("add_conversation_reply:ok", {
+        id: message.id,
+        role: message.role,
+      });
+      return {
+        content: [{ type: "text", text: JSON.stringify(message, null, 2) }],
+      };
+    } catch (error) {
+      logMcpConversation("add_conversation_reply:error", {
+        message: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 );
 

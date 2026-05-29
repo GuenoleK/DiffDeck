@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import type { ReviewSnapshot } from "@diffdeck/core";
 import {
+  addConversationMessage,
+  clearConversation,
   getActiveReview,
   importReviewSession,
   resetActiveReview,
@@ -10,6 +12,7 @@ import {
 import { FindingCard } from "../finding-card/FindingCard.js";
 import { PublicationQueue } from "./components/PublicationQueue/PublicationQueue.js";
 import { ResetReviewDialog } from "./components/ResetReviewDialog/ResetReviewDialog.js";
+import { ReviewConversationPanel } from "./components/ReviewConversationPanel/ReviewConversationPanel.js";
 import { ReviewContextPanel } from "./components/ReviewContextPanel/ReviewContextPanel.js";
 import { ReviewSharePanel } from "./components/ReviewSharePanel/ReviewSharePanel.js";
 import { ReviewSummary } from "./components/ReviewSummary/ReviewSummary.js";
@@ -42,6 +45,7 @@ export function ReviewWorkspace() {
   const [isResetOpen, setIsResetOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [isSessionOpen, setIsSessionOpen] = useState(false);
+  const [conversationFindingId, setConversationFindingId] = useState<string | undefined>();
   const approvedFindings = snapshot?.findings.filter((finding) => finding.status === "approved") ?? [];
   const unresolvedCount =
     snapshot?.findings.filter((finding) => finding.status === "draft" || finding.status === "approved").length ?? 0;
@@ -60,7 +64,8 @@ export function ReviewWorkspace() {
 
   return (
     <section className="review-workspace">
-      <header className="review-workspace__header">
+      <div className="review-workspace__main">
+        <header className="review-workspace__header">
         <div className="review-workspace__identity">
           <div className="review-workspace__heading">
             <p className="review-workspace__eyebrow">DiffDeck</p>
@@ -96,90 +101,115 @@ export function ReviewWorkspace() {
             <ReviewSummary snapshot={snapshot} />
           </div>
         ) : null}
-      </header>
+        </header>
 
-      {snapshot ? (
-        <ReviewContextPanel
-          isOpen={isContextOpen}
-          onClose={() => setIsContextOpen(false)}
-          onSave={async (contextSummary) => {
-            await updateActiveReview({ contextSummary });
-            await refresh();
+        {snapshot ? (
+          <ReviewContextPanel
+            isOpen={isContextOpen}
+            onClose={() => setIsContextOpen(false)}
+            onSave={async (contextSummary) => {
+              await updateActiveReview({ contextSummary });
+              await refresh();
+            }}
+            review={snapshot.review}
+          />
+        ) : null}
+
+        <SessionHandoffPanel
+          isOpen={isSessionOpen}
+          onClose={() => setIsSessionOpen(false)}
+          onImport={async (session) => {
+            const nextSnapshot = await importReviewSession(session);
+            setSnapshot(nextSnapshot);
+            setIsSessionOpen(false);
           }}
-          review={snapshot.review}
         />
-      ) : null}
 
-      <SessionHandoffPanel
-        isOpen={isSessionOpen}
-        onClose={() => setIsSessionOpen(false)}
-        onImport={async (session) => {
-          const nextSnapshot = await importReviewSession(session);
-          setSnapshot(nextSnapshot);
-          setIsSessionOpen(false);
-        }}
-      />
-
-      <ResetReviewDialog
-        isOpen={isResetOpen}
-        onClose={() => setIsResetOpen(false)}
-        onReset={async () => {
-          const nextSnapshot = await resetActiveReview();
-          setSnapshot(nextSnapshot);
-          setIsContextOpen(false);
-          setIsShareOpen(false);
-          setIsSessionOpen(false);
-        }}
-      />
-
-      {snapshot ? (
-        <ReviewSharePanel
-          findings={approvedFindings}
-          isOpen={isShareOpen}
-          onClose={() => setIsShareOpen(false)}
-          review={snapshot.review}
+        <ResetReviewDialog
+          isOpen={isResetOpen}
+          onClose={() => setIsResetOpen(false)}
+          onReset={async () => {
+            const nextSnapshot = await resetActiveReview();
+            setSnapshot(nextSnapshot);
+            setIsContextOpen(false);
+            setIsShareOpen(false);
+            setIsSessionOpen(false);
+            setConversationFindingId(undefined);
+          }}
         />
-      ) : null}
 
-      {snapshot ? (
-        <PublicationQueue
-          approvedFindings={approvedFindings}
-          onShare={() => setIsShareOpen(true)}
-          review={snapshot.review}
-        />
-      ) : null}
+        {snapshot ? (
+          <ReviewSharePanel
+            findings={approvedFindings}
+            isOpen={isShareOpen}
+            onClose={() => setIsShareOpen(false)}
+            review={snapshot.review}
+          />
+        ) : null}
 
-      <div className="review-workspace__deck">
-        <div className="review-workspace__deck-header">
-          <div>
-            <p className="review-workspace__deck-kicker">Review deck</p>
-            <h2 className="review-workspace__deck-title">Findings ready for human judgment</h2>
-          </div>
-          <span className="review-workspace__deck-count">{unresolvedCount} open</span>
-        </div>
+        {snapshot ? (
+          <PublicationQueue
+            approvedFindings={approvedFindings}
+            onShare={() => setIsShareOpen(true)}
+            review={snapshot.review}
+          />
+        ) : null}
 
-        <div className="review-workspace__content">
-          {snapshot?.findings.length ? (
-            snapshot.findings.map((finding) => (
-              <FindingCard
-                finding={finding}
-                key={finding.id}
-                onFindingChange={async (patch) => {
-                  await updateFinding(finding.id, patch);
-                  await refresh();
-                }}
-              />
-            ))
-          ) : (
-            <div className="review-workspace__empty">
-              <h2 className="review-workspace__empty-title">No findings in the deck</h2>
-              <p className="review-workspace__empty-text">
-                Start a review session to collect structured comments, then approve only the ones worth publishing.
-              </p>
+        <div className="review-workspace__deck">
+          <div className="review-workspace__deck-header">
+            <div>
+              <p className="review-workspace__deck-kicker">Review deck</p>
+              <h2 className="review-workspace__deck-title">Findings ready for human judgment</h2>
             </div>
-          )}
+            <span className="review-workspace__deck-count">{unresolvedCount} open</span>
+          </div>
+
+          <div className="review-workspace__content">
+            {snapshot?.findings.length ? (
+              snapshot.findings.map((finding) => (
+                <FindingCard
+                  finding={finding}
+                  isConversationTarget={conversationFindingId === finding.id}
+                  key={finding.id}
+                  onAskAboutFinding={(targetFinding) => setConversationFindingId(targetFinding.id)}
+                  onFindingChange={async (patch) => {
+                    await updateFinding(finding.id, patch);
+                    await refresh();
+                  }}
+                />
+              ))
+            ) : (
+              <div className="review-workspace__empty">
+                <h2 className="review-workspace__empty-title">No findings in the deck</h2>
+                <p className="review-workspace__empty-text">
+                  Start a review session to collect structured comments, then approve only the ones worth publishing.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {snapshot ? (
+        <ReviewConversationPanel
+          onAsk={async ({ body, isReviewAttached, relatedFindingId }) => {
+            await addConversationMessage({
+              role: "human",
+              body,
+              isReviewAttached,
+              relatedFindingId: relatedFindingId ?? conversationFindingId,
+            });
+            await refresh();
+          }}
+          onClearConversation={async () => {
+            const nextSnapshot = await clearConversation();
+            setSnapshot(nextSnapshot);
+          }}
+          onScopeChange={setConversationFindingId}
+          selectedFindingId={conversationFindingId}
+          snapshot={snapshot}
+        />
+      ) : null}
     </section>
   );
 }

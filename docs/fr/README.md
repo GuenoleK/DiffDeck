@@ -93,11 +93,12 @@ Le même principe fonctionne pour des changements locaux ou un fichier diff isol
 
 DiffDeck fournit des skills destinés aux projets qui veulent utiliser DiffDeck.
 
-Depuis DiffDeck, copie ces deux dossiers :
+Depuis DiffDeck, copie ces dossiers :
 
 ```text
 <DIFFDECK_ROOT>\distributed\skills\diffdeck-code-review
 <DIFFDECK_ROOT>\distributed\skills\diffdeck-browser-prefill
+<DIFFDECK_ROOT>\distributed\skills\diffdeck-sync-distributed
 ```
 
 Colle-les dans le projet cible :
@@ -116,6 +117,8 @@ target-project/
         SKILL.md
       diffdeck-browser-prefill/
         SKILL.md
+      diffdeck-sync-distributed/
+        SKILL.md
 ```
 
 Ajoute aussi une courte note dans les instructions agent du projet cible, par exemple dans `AGENTS.md`, `CLAUDE.md`, `GEMINI.md` ou un fichier d'instructions partagé :
@@ -124,11 +127,31 @@ Ajoute aussi une courte note dans les instructions agent du projet cible, par ex
 DiffDeck:
 - For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
 - For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
+- For installing or updating DiffDeck distributed skills and snippets in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
+- For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 ```
 
 La note est en anglais pour rester cohérente avec les skills distribués.
+
+## Synchroniser les skills plus tard
+
+Après la première copie manuelle, le skill `diffdeck-sync-distributed` permet de rafraîchir les assets DiffDeck distribués dans un projet cible.
+
+Dry-run :
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT> --dry-run
+```
+
+Application des changements sans conflit :
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT>
+```
+
+Le script écrit `.agent/diffdeck/sync-manifest.json` et ignore les fichiers modifiés localement depuis la synchronisation précédente. Utilise `--force` seulement si l'écrasement des adaptations locales est volontaire.
 
 ## Flux recommandé
 
@@ -137,8 +160,19 @@ La note est en anglais pour rester cohérente avec les skills distribués.
 3. Demander une revue DiffDeck sur une MR/PR, une branche, un diff ou des changements locaux.
 4. L'IA lit les règles du projet et analyse les changements.
 5. L'IA pousse les retours structurés dans DiffDeck.
-6. L'humain édite les commentaires finaux, approuve, rejette ou résout les cartes.
-7. Si besoin, l'humain demande à l'IA de préremplir les commentaires approuvés dans GitLab/GitHub.
+6. L'humain peut poser une question depuis le chat principal; l'agent lit `list_pending_conversation` ou surveille avec `wait_for_conversation_message`, puis répond avec `add_conversation_reply`.
+7. L'humain édite les commentaires finaux, approuve, rejette ou résout les cartes.
+8. Si besoin, l'humain demande à l'IA de préremplir les commentaires approuvés dans GitLab/GitHub.
+
+## Conversation avec l'IA
+
+Le chat principal permet d'ajouter une question à la session. Une question peut être attachée à la revue active, liée à un finding précis, ou détachée quand elle ne concerne pas la revue courante.
+
+DiffDeck ne contacte pas directement un fournisseur IA. L'outil IA configuré avec MCP utilise son propre abonnement et son propre contexte projet, lit la conversation avec `list_conversation` ou `list_pending_conversation`, peut attendre une question avec `wait_for_conversation_message`, puis renvoie la réponse dans l'UI avec `add_conversation_reply`.
+
+Pour obtenir une reponse dans l'interface, il faut donc garder un agent ouvert cote outil IA et lui demander explicitement de traiter ou surveiller le chat DiffDeck, par exemple : `Surveille le chat DiffDeck avec wait_for_conversation_message, reponds a la question humaine en attente, puis ajoute la reponse avec add_conversation_reply. Repete jusqu'a ce que je te demande d'arreter.`
+
+Si la configuration MCP vient d'etre ajoutee ou modifiee, redemarre l'outil IA pour qu'il recharge le serveur MCP DiffDeck.
 
 ## Reprise de session
 
