@@ -4,6 +4,8 @@ import type {
   FindingPatchInput,
   Review,
   ReviewConversationMessage,
+  ReviewFileDiff,
+  ReviewFileDiffDraftInput,
   ReviewPatchInput,
   ReviewSession,
   ReviewSnapshot,
@@ -90,6 +92,20 @@ export async function getApprovedFindings(): Promise<Finding[]> {
 
   if (!response.ok) {
     throw new Error("Unable to load approved findings");
+  }
+
+  return response.json();
+}
+
+export async function addFileDiff(input: ReviewFileDiffDraftInput): Promise<ReviewFileDiff> {
+  const response = await fetch(`${apiUrl}/reviews/active/file-diffs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to add file diff: ${response.status} ${await response.text()}`);
   }
 
   return response.json();

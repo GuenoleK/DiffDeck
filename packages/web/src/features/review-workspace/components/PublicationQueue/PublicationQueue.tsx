@@ -31,6 +31,8 @@ export function PublicationQueue({ approvedFindings, onShare, review }: Publicat
       "For GitLab level 2, fill the textarea, click Start a review for the first comment, then Add to review for subsequent comments. Do not click Add comment now, Submit review, Publish, Merge, or any final publication action.",
       "If I choose level 1, opening the inline comment form and filling its textarea is sufficient; do not click Start a review or Add comment now.",
       "Never publish or submit anything unless I explicitly confirm level 3.",
+      "When the browser work is finished, disconnect or detach the browser automation session if your tool supports it. Do not close my normal browser window unless I explicitly ask.",
+      "If you cannot disconnect the browser connection from your side, tell me exactly how to do it for the current mode, for example stopping DevTools MCP, disabling remote debugging in chrome://inspect/#remote-debugging, closing a dedicated debugging browser, disconnecting the extension session, or closing the integrated browser session.",
     ].join("\n");
   }, [approvedCount, review.sourceUrl]);
 

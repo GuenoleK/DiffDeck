@@ -6,7 +6,8 @@
         "<DIFFDECK_ROOT>\\packages\\mcp\\dist\\index.js"
       ],
       "env": {
-        "DIFFDECK_API_URL": "http://127.0.0.1:4337/api"
+        "DIFFDECK_API_URL": "http://127.0.0.1:4337/api",
+        "DIFFDECK_LOG_LEVEL": "info"
       }
     }
   }

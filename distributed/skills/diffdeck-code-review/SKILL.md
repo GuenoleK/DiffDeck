@@ -81,6 +81,8 @@ An AI agent may run the print command to show the configuration. It may run the 
 
 After MCP configuration changes, tell the user to restart the AI tool so it reloads MCP servers.
 
+DiffDeck server and MCP logs can be tuned with `DIFFDECK_LOG_LEVEL`: `silent`, `error`, `info`, or `debug`. The default is `info`; repeated conversation polling logs only appear in `debug`.
+
 Do not pretend that findings were pushed if MCP is unavailable.
 
 ## Missing MCP Behavior
@@ -154,9 +156,10 @@ I can run the Codex setup from the DiffDeck repository if you confirm its locati
 7. Read surrounding files only when needed to confirm a concrete risk.
 8. Create or reuse a DiffDeck review.
 9. If ticket information, acceptance criteria, business rules, or functional context were provided, call `set_review_context` with a concise summary for the UI side panel.
-10. Push one structured finding per actionable review comment.
-11. Mark the review ready for human review.
-12. End with a concise chat summary of the most important risks, uncertainties, and next steps.
+10. For local Git reviews, call `sync_git_file_diffs` with the target/base ref so the UI file-diff page is filled automatically. If `sync_git_file_diffs` is unavailable but unified diff content is available, call `add_file_diff` once per processed file.
+11. Push one structured finding per actionable review comment.
+12. Mark the review ready for human review.
+13. End with a concise chat summary of the most important risks, uncertainties, and next steps.
 
 ## Conversation Follow-Up
 
@@ -166,7 +169,7 @@ If the user asks you to answer a question from DiffDeck, continue a DiffDeck con
 2. If the user refers to a specific older message, use `list_conversation` to read the full conversation history.
 3. Identify the latest unanswered human question, or the specific question the user named.
 4. Use the active project context and your own available tools to answer.
-5. Call `add_conversation_reply` with a concise answer. Preserve `isReviewAttached` when answering an attached review question. Set `relatedMessageId` to the human message id and `relatedFindingId` when the answer is about a specific finding.
+5. Call `add_conversation_reply` with a concise answer. Preserve `isReviewAttached` when answering an attached review question. Set `relatedMessageId` to the human message id and preserve `relatedFindingId`, `relatedFilePath`, `relatedFilePaths`, `relatedLine`, and `relatedLineSide` when the answer is about a specific finding, file, or selected diff line.
 6. Summarize briefly in chat that the answer was sent to DiffDeck.
 
 If the user asks you to watch the DiffDeck chat, stay connected, or answer UI messages as they arrive:
@@ -238,6 +241,24 @@ Each DiffDeck finding should include:
 - `relationToChange`: one of `introduced`, `new_surface`, `worsened`, `preexisting_context`.
 - `confidence`: `low`, `medium`, or `high`.
 - `agentName`: the current AI tool name when known.
+
+## File Diff Rules
+
+For local Git reviews, prefer `sync_git_file_diffs` with the target/base ref. This is mandatory when available for requests like "review the current branch against main" or "analyze local changes against dev", because findings and file diffs should appear together in DiffDeck. Each call replaces the active review's current Git file-diff set, so files removed from the latest Git diff disappear from the UI.
+
+When the review source is not a local Git repository but the agent has reliable unified diff content for reviewed files, call `add_file_diff` for each processed file.
+
+Each file diff should include:
+
+- `filePath`: current path in the target project.
+- `oldFilePath`: previous path when the file was renamed or copied.
+- `status`: one of `added`, `modified`, `deleted`, `renamed`, `copied`, or `unchanged`.
+- `unifiedDiff`: exact unified diff text for that file.
+- `language`: language or extension when useful.
+- `additions` and `deletions`: counts when known.
+- `agentName`: the current AI tool name when known.
+
+Do not invent diff content. If only a finding snippet is known, add the finding and skip `add_file_diff` for that file.
 
 ## Review Discipline
 

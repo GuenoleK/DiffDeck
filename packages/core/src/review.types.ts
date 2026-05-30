@@ -12,6 +12,8 @@ export type FindingConfidence = (typeof confidenceValues)[number];
 
 export type ReviewStatus = "draft" | "ready_for_human_review" | "closed";
 export type ConversationRole = "human" | "agent";
+export type ReviewFileStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "unchanged";
+export type ReviewLineSide = "old" | "new";
 
 export type FindingLocation = {
   filePath: string;
@@ -48,6 +50,22 @@ export type Finding = {
   updatedAt: string;
 };
 
+export type ReviewFileDiff = {
+  id: string;
+  reviewId: string;
+  filePath: string;
+  oldFilePath?: string;
+  status: ReviewFileStatus;
+  language?: string;
+  unifiedDiff: string;
+  additions?: number;
+  deletions?: number;
+  isGenerated?: boolean;
+  agentName?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type ReviewConversationMessage = {
   id: string;
   reviewId: string;
@@ -56,6 +74,10 @@ export type ReviewConversationMessage = {
   isReviewAttached: boolean;
   relatedMessageId?: string;
   relatedFindingId?: string;
+  relatedFilePath?: string;
+  relatedFilePaths?: string[];
+  relatedLine?: number;
+  relatedLineSide?: ReviewLineSide;
   agentName?: string;
   createdAt: string;
 };
@@ -63,6 +85,7 @@ export type ReviewConversationMessage = {
 export type ReviewSnapshot = {
   review: Review;
   findings: Finding[];
+  fileDiffs: ReviewFileDiff[];
   conversation: ReviewConversationMessage[];
 };
 

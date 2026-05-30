@@ -4,16 +4,18 @@ import {
   CreateReviewSchema,
   FindingDraftSchema,
   FindingPatchSchema,
+  ReviewFileDiffDraftSchema,
   ReviewPatchSchema,
   ReviewSessionSchema,
 } from "@diffdeck/core";
+import { logger } from "./logger.js";
 import { isLocalRequestHost, isTrustedOpenUrlRequest, openUrlInDefaultBrowser, parseOpenableUrl } from "./open-url.js";
 import { reviewStore } from "./review-store.memory.js";
 
 export const reviewRoutes = new Hono();
 
-function logConversation(event: string, details: Record<string, unknown> = {}) {
-  console.info(`[DiffDeck conversation] ${event}`, details);
+function logConversation(level: "info" | "debug", event: string, details: Record<string, unknown> = {}) {
+  logger[level](`[DiffDeck conversation] ${event}`, details);
 }
 
 reviewRoutes.get("/health", (context) => {
@@ -83,9 +85,25 @@ reviewRoutes.get("/reviews/active/approved-findings", (context) => {
   return context.json(reviewStore.listApprovedFindings());
 });
 
+reviewRoutes.get("/reviews/active/file-diffs", (context) => {
+  return context.json(reviewStore.listFileDiffs());
+});
+
+reviewRoutes.post("/reviews/active/file-diffs", async (context) => {
+  const body = await context.req.json();
+  const input = ReviewFileDiffDraftSchema.parse(body);
+  return context.json(reviewStore.upsertFileDiff(input), 201);
+});
+
+reviewRoutes.put("/reviews/active/file-diffs", async (context) => {
+  const body = await context.req.json();
+  const input = ReviewFileDiffDraftSchema.array().parse(body);
+  return context.json(reviewStore.replaceFileDiffs(input));
+});
+
 reviewRoutes.get("/reviews/active/conversation", (context) => {
   const messages = reviewStore.listConversationMessages();
-  logConversation("list", {
+  logConversation("debug", "list", {
     count: messages.length,
     pendingHuman: messages.at(-1)?.role === "human",
   });
@@ -94,7 +112,7 @@ reviewRoutes.get("/reviews/active/conversation", (context) => {
 
 reviewRoutes.get("/reviews/active/conversation/pending", (context) => {
   const messages = reviewStore.listPendingConversationMessages();
-  logConversation("pending", {
+  logConversation("debug", "pending", {
     count: messages.length,
     latestId: messages.at(-1)?.id,
   });
@@ -105,7 +123,7 @@ reviewRoutes.post("/reviews/active/conversation", async (context) => {
   const body = await context.req.json();
   const input = ConversationMessageDraftSchema.parse(body);
   const message = reviewStore.addConversationMessage(input);
-  logConversation("add", {
+  logConversation("info", "add", {
     id: message.id,
     role: message.role,
     isReviewAttached: message.isReviewAttached,
@@ -119,7 +137,7 @@ reviewRoutes.post("/reviews/active/conversation", async (context) => {
 reviewRoutes.delete("/reviews/active/conversation", (context) => {
   const previousCount = reviewStore.listConversationMessages().length;
   const snapshot = reviewStore.clearConversation();
-  logConversation("clear", { previousCount });
+  logConversation("info", "clear", { previousCount });
   return context.json(snapshot);
 });
 

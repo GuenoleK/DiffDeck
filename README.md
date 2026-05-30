@@ -168,7 +168,8 @@ Then add a `diffdeck` MCP server to your AI tool configuration:
         "<DIFFDECK_ROOT>\\packages\\mcp\\dist\\index.js"
       ],
       "env": {
-        "DIFFDECK_API_URL": "http://127.0.0.1:4337/api"
+        "DIFFDECK_API_URL": "http://127.0.0.1:4337/api",
+        "DIFFDECK_LOG_LEVEL": "info"
       }
     }
   }
@@ -186,6 +187,24 @@ For development only:
 
 ```bash
 npm run dev:mcp
+```
+
+### Logging
+
+Set `DIFFDECK_LOG_LEVEL` to control DiffDeck server and MCP logs:
+
+- `silent`: no DiffDeck logs;
+- `error`: errors only;
+- `info`: startup and meaningful conversation events;
+- `debug`: verbose polling and diagnostic logs.
+
+The default is `info`. Conversation polling logs, such as repeated `pending` checks, are only emitted at `debug`.
+
+For the local API server, set it before starting the server, for example:
+
+```powershell
+$env:DIFFDECK_LOG_LEVEL = "error"
+npm run dev:server
 ```
 
 Available MCP tools:
@@ -366,7 +385,7 @@ Prefill the approved DiffDeck comments on this GitLab merge request, but do not 
 
 `diffdeck-sync-distributed`
 
-Use this when a target project should install or update DiffDeck distributed skills and snippets from a local DiffDeck repository. The bundled sync script copies skills into `.agent/skills`, stores snippets in `.agent/diffdeck/snippets`, and keeps a manifest so local edits are not overwritten silently.
+Use this when a target project should install or update DiffDeck distributed skills from a local DiffDeck repository. The bundled sync script copies skills into `.agent/skills`, maintains a bounded DiffDeck block in the target project's agent instructions, and keeps a manifest so local skill edits are not overwritten silently. It does not copy example snippets into the target project.
 
 Typical prompt:
 
@@ -416,13 +435,15 @@ For example:
 DiffDeck:
 - For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
 - For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
-- For installing or updating DiffDeck distributed skills and snippets in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
+- For installing or updating DiffDeck distributed skills and this project's DiffDeck instruction block, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
 - For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 ```
 
-If the project does not have agent entry files yet, use the examples in:
+The sync script writes the same guidance inside a managed block. By default it updates existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` files. If none exists, it creates `AGENTS.md`. To target another instruction file, pass `--instructions-file <PATH>`. To sync skills only, pass `--skip-instructions`.
+
+The files in this folder are examples only and are not copied by the sync script:
 
 ```text
 <DIFFDECK_ROOT>\distributed\snippets\
@@ -432,7 +453,7 @@ Keep these files short. Project-specific rules should stay in the target project
 
 ### Sync Distributed Updates Later
 
-After the first manual copy, use `diffdeck-sync-distributed` from the target project to refresh DiffDeck distributed assets.
+After the first manual copy, use `diffdeck-sync-distributed` from the target project to refresh DiffDeck distributed skills and the managed instruction block.
 
 Dry-run:
 
@@ -447,6 +468,12 @@ node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.m
 ```
 
 The script writes `.agent/diffdeck/sync-manifest.json` and skips files changed locally since the previous sync. Use `--force` only when overwriting local edits is intentional.
+
+If the target project stores shared instructions somewhere else, choose the file explicitly:
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT> --instructions-file .agent/instructions/00-index.md
+```
 
 ## Expected User Flow In A Target Project
 

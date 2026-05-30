@@ -66,6 +66,24 @@ npm --prefix <DIFFDECK_ROOT> run setup:mcp:codex
 
 Après une modification de configuration MCP, il faut généralement redémarrer l'outil IA pour qu'il recharge les serveurs MCP.
 
+## Configurer les logs
+
+Utilise `DIFFDECK_LOG_LEVEL` pour contrôler les logs du serveur DiffDeck et du serveur MCP :
+
+- `silent` : aucun log DiffDeck ;
+- `error` : erreurs seulement ;
+- `info` : démarrage et événements de conversation utiles ;
+- `debug` : polling et diagnostics détaillés.
+
+La valeur par défaut est `info`. Les logs répétitifs de polling, comme les vérifications `pending`, ne sont affichés qu'en `debug`.
+
+Pour le serveur API local, définis la variable avant de démarrer le serveur :
+
+```powershell
+$env:DIFFDECK_LOG_LEVEL = "error"
+npm run dev:server
+```
+
 ## Utiliser DiffDeck sans MR ou PR
 
 DiffDeck peut être utilisé avant la création d'une merge request ou pull request.
@@ -127,17 +145,17 @@ Ajoute aussi une courte note dans les instructions agent du projet cible, par ex
 DiffDeck:
 - For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
 - For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
-- For installing or updating DiffDeck distributed skills and snippets in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
+- For installing or updating DiffDeck distributed skills and this project's DiffDeck instruction block, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
 - For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 ```
 
-La note est en anglais pour rester cohérente avec les skills distribués.
+La note est en anglais pour rester cohérente avec les skills distribués. Le script de synchronisation sait maintenir cette note dans un bloc géré par DiffDeck. Par défaut, il met à jour les fichiers `AGENTS.md`, `CLAUDE.md` ou `GEMINI.md` existants; s'il n'en trouve aucun, il crée `AGENTS.md`. Les fichiers dans `distributed/snippets` restent des exemples et ne sont pas copiés automatiquement.
 
 ## Synchroniser les skills plus tard
 
-Après la première copie manuelle, le skill `diffdeck-sync-distributed` permet de rafraîchir les assets DiffDeck distribués dans un projet cible.
+Après la première copie manuelle, le skill `diffdeck-sync-distributed` permet de rafraîchir les skills DiffDeck distribués et le bloc d'instructions DiffDeck dans un projet cible.
 
 Dry-run :
 
@@ -152,6 +170,18 @@ node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.m
 ```
 
 Le script écrit `.agent/diffdeck/sync-manifest.json` et ignore les fichiers modifiés localement depuis la synchronisation précédente. Utilise `--force` seulement si l'écrasement des adaptations locales est volontaire.
+
+Pour cibler un autre fichier d'instructions du projet :
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT> --instructions-file .agent/instructions/00-index.md
+```
+
+Pour synchroniser seulement les skills sans toucher aux instructions :
+
+```bash
+node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.mjs --diffdeck-root <DIFFDECK_ROOT> --skip-instructions
+```
 
 ## Flux recommandé
 

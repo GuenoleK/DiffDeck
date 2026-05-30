@@ -1,4 +1,10 @@
-import type { FindingDraftInput, ReviewConversationMessage } from "@diffdeck/core";
+import type {
+  FindingDraftInput,
+  ReviewConversationMessage,
+  ReviewFileDiff,
+  ReviewFileDiffDraftInput,
+  ReviewSnapshot,
+} from "@diffdeck/core";
 
 const defaultBaseUrl = "http://127.0.0.1:4337/api";
 
@@ -11,6 +17,10 @@ export class DiffDeckClient {
       sourceUrl: input.sourceUrl,
       repositoryPath: input.repositoryPath,
     });
+  }
+
+  async getActiveReview(): Promise<ReviewSnapshot> {
+    return this.get("/reviews/active");
   }
 
   async resetReview() {
@@ -33,6 +43,18 @@ export class DiffDeckClient {
     return this.get("/reviews/active/approved-findings");
   }
 
+  async addFileDiff(input: ReviewFileDiffDraftInput): Promise<ReviewFileDiff> {
+    return this.post("/reviews/active/file-diffs", input);
+  }
+
+  async replaceFileDiffs(input: ReviewFileDiffDraftInput[]): Promise<ReviewFileDiff[]> {
+    return this.put("/reviews/active/file-diffs", input);
+  }
+
+  async listFileDiffs(): Promise<ReviewFileDiff[]> {
+    return this.get("/reviews/active/file-diffs");
+  }
+
   async listConversationMessages() {
     return this.get("/reviews/active/conversation");
   }
@@ -46,6 +68,10 @@ export class DiffDeckClient {
     isReviewAttached?: boolean;
     relatedMessageId?: string;
     relatedFindingId?: string;
+    relatedFilePath?: string;
+    relatedFilePaths?: string[];
+    relatedLine?: number;
+    relatedLineSide?: "old" | "new";
     agentName?: string;
   }) {
     return this.post("/reviews/active/conversation", {
@@ -71,6 +97,20 @@ export class DiffDeckClient {
   private async post(path: string, body: unknown) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DiffDeck API error ${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
+  }
+
+  private async put(path: string, body: unknown) {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });

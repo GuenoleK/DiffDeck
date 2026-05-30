@@ -1,12 +1,15 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import type { ReviewSnapshot } from "@diffdeck/core";
 import { Button } from "../../../../shared/components/Button/Button.js";
+import type { ReviewDiffContext } from "../../../review-diff/review-diff-context.js";
 import "./ReviewConversationPanel.scss";
 
 type ReviewConversationPanelProps = {
   onAsk: (input: { body: string; isReviewAttached: boolean; relatedFindingId?: string }) => Promise<void>;
   onClearConversation: () => Promise<void>;
+  onDiffContextClear: () => void;
   onScopeChange: (findingId: string | undefined) => void;
+  selectedDiffContext: ReviewDiffContext;
   selectedFindingId?: string;
   snapshot: ReviewSnapshot;
 };
@@ -18,10 +21,24 @@ function formatMessageTime(value: string): string {
   }).format(new Date(value));
 }
 
+function formatFileScope(filePaths: string[]): string {
+  if (filePaths.length === 0) {
+    return "Whole review";
+  }
+
+  if (filePaths.length === 1) {
+    return filePaths[0];
+  }
+
+  return `${filePaths.length} files`;
+}
+
 export function ReviewConversationPanel({
   onAsk,
   onClearConversation,
+  onDiffContextClear,
   onScopeChange,
+  selectedDiffContext,
   selectedFindingId,
   snapshot,
 }: ReviewConversationPanelProps) {
@@ -38,12 +55,28 @@ export function ReviewConversationPanel({
     [snapshot.findings],
   );
   const selectedFinding = selectedFindingId ? findingById.get(selectedFindingId) : undefined;
+  const selectedLine = selectedDiffContext.line;
+  const hasDiffScope = selectedDiffContext.filePaths.length > 0 || Boolean(selectedLine);
   const attachmentLabel = isReviewAttached ? "Review context" : "General";
-  const scopeLabel = selectedFinding?.title ?? "Whole review";
-  const lastMessage = snapshot.conversation.at(-1);
-  const isAwaitingAgentReply = lastMessage?.role === "human";
+  const scopeLabel =
+    selectedFinding?.title ??
+    (selectedLine
+      ? `${selectedLine.filePath}:${selectedLine.line} (${selectedLine.side})`
+      : formatFileScope(selectedDiffContext.filePaths));
+  const pendingQuestionCount = useMemo(() => {
+    const answeredMessageIds = new Set(
+      snapshot.conversation
+        .filter((message) => message.role === "agent" && message.relatedMessageId)
+        .map((message) => message.relatedMessageId),
+    );
+
+    return snapshot.conversation.filter((message) => message.role === "human" && !answeredMessageIds.has(message.id))
+      .length;
+  }, [snapshot.conversation]);
+  const isAwaitingAgentReply = pendingQuestionCount > 0;
+  const pendingQuestionLabel = `${pendingQuestionCount} pending question${pendingQuestionCount === 1 ? "" : "s"}`;
   const agentPrompt =
-    "Start watching DiffDeck chat: call wait_for_conversation_message, answer the pending human question, then add the reply with add_conversation_reply. Repeat until I ask you to stop.";
+    "Start watching DiffDeck chat: call wait_for_conversation_message, use relatedFindingId, relatedFilePath, relatedFilePaths, relatedLine, and relatedLineSide as context when present, then answer with add_conversation_reply. Repeat until I ask you to stop.";
 
   useEffect(() => {
     if (selectedFindingId && !findingById.has(selectedFindingId)) {
@@ -52,10 +85,10 @@ export function ReviewConversationPanel({
   }, [findingById, onScopeChange, selectedFindingId]);
 
   useEffect(() => {
-    if (selectedFindingId) {
+    if (selectedFindingId || hasDiffScope) {
       setIsReviewAttached(true);
     }
-  }, [selectedFindingId]);
+  }, [hasDiffScope, selectedFindingId]);
 
   useEffect(() => {
     if (state === "idle") {
@@ -150,7 +183,7 @@ export function ReviewConversationPanel({
           <span className="review-conversation-panel__signal">{snapshot.conversation.length} messages</span>
           {isAwaitingAgentReply ? (
             <span className="review-conversation-panel__signal review-conversation-panel__signal--pending">
-              Awaiting agent
+              {pendingQuestionLabel}
             </span>
           ) : null}
           <button
@@ -175,6 +208,10 @@ export function ReviewConversationPanel({
         {snapshot.conversation.length ? (
           snapshot.conversation.map((message) => {
             const relatedFinding = message.relatedFindingId ? findingById.get(message.relatedFindingId) : undefined;
+            const relatedFiles = message.relatedFilePaths ?? (message.relatedFilePath ? [message.relatedFilePath] : []);
+            const relatedFileLabel = message.relatedLine
+              ? `${message.relatedFilePath ?? relatedFiles[0]}:${message.relatedLine} (${message.relatedLineSide ?? "new"})`
+              : formatFileScope(relatedFiles);
 
             return (
               <article
@@ -192,6 +229,7 @@ export function ReviewConversationPanel({
                 <div className="review-conversation-panel__message-meta">
                   <span>{message.isReviewAttached ? "Attached" : "Free chat"}</span>
                   {relatedFinding ? <span>{relatedFinding.title}</span> : null}
+                  {!relatedFinding && relatedFiles.length ? <span>{relatedFileLabel}</span> : null}
                 </div>
                 <p className="review-conversation-panel__body">{message.body}</p>
               </article>
@@ -245,8 +283,14 @@ export function ReviewConversationPanel({
               <span>Scope</span>
               <div className="review-conversation-panel__scope-pill">
                 <span title={scopeLabel}>{scopeLabel}</span>
-                {selectedFinding ? (
-                  <button onClick={() => onScopeChange(undefined)} type="button">
+                {selectedFinding || hasDiffScope ? (
+                  <button
+                    onClick={() => {
+                      onScopeChange(undefined);
+                      onDiffContextClear();
+                    }}
+                    type="button"
+                  >
                     Clear
                   </button>
                 ) : null}
@@ -273,7 +317,9 @@ export function ReviewConversationPanel({
             {state === "sent" ? "Message saved. Waiting for a connected MCP agent." : null}
             {state === "copied" ? "Agent prompt copied" : null}
             {state === "failed" ? `Conversation error: ${errorMessage ?? "unknown error"}` : null}
-            {state === "idle" && isAwaitingAgentReply ? "Latest question is still waiting for an agent reply." : null}
+            {state === "idle" && isAwaitingAgentReply
+              ? `${pendingQuestionLabel} still waiting for an agent reply.`
+              : null}
           </div>
           {isAwaitingAgentReply ? (
             <button className="review-conversation-panel__agent-prompt" onClick={() => void copyAgentPrompt()} type="button">

@@ -70,12 +70,35 @@ export const FindingSchema = FindingDraftSchema.extend({
   updatedAt: z.string().min(1),
 });
 
+export const ReviewFileDiffDraftSchema = z.object({
+  filePath: z.string().min(1),
+  oldFilePath: z.string().min(1).optional(),
+  status: z.enum(["added", "modified", "deleted", "renamed", "copied", "unchanged"]),
+  language: z.string().min(1).optional(),
+  unifiedDiff: z.string().min(1),
+  additions: z.number().int().nonnegative().optional(),
+  deletions: z.number().int().nonnegative().optional(),
+  isGenerated: z.boolean().optional(),
+  agentName: z.string().optional(),
+});
+
+export const ReviewFileDiffSchema = ReviewFileDiffDraftSchema.extend({
+  id: z.string().min(1),
+  reviewId: z.string().min(1),
+  createdAt: z.string().min(1),
+  updatedAt: z.string().min(1),
+});
+
 export const ConversationMessageDraftSchema = z.object({
   role: z.enum(["human", "agent"]),
   body: z.string().min(1),
   isReviewAttached: z.boolean().default(true),
   relatedMessageId: z.string().min(1).optional(),
   relatedFindingId: z.string().min(1).optional(),
+  relatedFilePath: z.string().min(1).optional(),
+  relatedFilePaths: z.array(z.string().min(1)).optional(),
+  relatedLine: z.number().int().positive().optional(),
+  relatedLineSide: z.enum(["old", "new"]).optional(),
   agentName: z.string().optional(),
 });
 
@@ -88,6 +111,7 @@ export const ConversationMessageSchema = ConversationMessageDraftSchema.extend({
 export const ReviewSnapshotSchema = z.object({
   review: ReviewSchema,
   findings: z.array(FindingSchema),
+  fileDiffs: z.array(ReviewFileDiffSchema).default([]),
   conversation: z.array(ConversationMessageSchema).default([]),
 });
 
@@ -101,5 +125,6 @@ export type CreateReviewInput = z.infer<typeof CreateReviewSchema>;
 export type ReviewPatchInput = z.infer<typeof ReviewPatchSchema>;
 export type FindingDraftInput = z.infer<typeof FindingDraftSchema>;
 export type FindingPatchInput = z.infer<typeof FindingPatchSchema>;
+export type ReviewFileDiffDraftInput = z.infer<typeof ReviewFileDiffDraftSchema>;
 export type ConversationMessageDraftInput = z.infer<typeof ConversationMessageDraftSchema>;
 export type ReviewSessionInput = z.infer<typeof ReviewSessionSchema>;

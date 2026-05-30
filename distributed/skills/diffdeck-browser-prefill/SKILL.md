@@ -79,7 +79,31 @@ For GitLab, placing multiple approved comments requires saving each inline comme
 7. Navigate to the changed file and target line for each finding.
 8. Place the comment according to the chosen action level.
 9. Stop before publishing unless the user explicitly asks to submit.
-10. Report which comments were placed and which could not be placed.
+10. Release the browser connection when the browser automation tool provides a close, disconnect, detach, or stop-session action. Do not close the user's normal browser window unless they explicitly asked for it.
+11. If the connection cannot be released from the agent side, tell the user exactly how to disconnect it for the mode being used.
+12. Report which comments were placed, which could not be placed, and whether the browser connection was disconnected or still needs user action.
+
+## Browser Disconnection
+
+At the end of any browser automation session, the agent must leave the user oriented about the browser connection state.
+
+Preferred behavior:
+
+- If the browser tool has a command to close, disconnect, detach, end session, stop auto-connect, or close the controlled integrated browser tab, use it after the requested work is complete.
+- If the browser tool controls the user's default Chrome/Edge browser, disconnect or detach the automation session without closing the user's normal browser window unless the user explicitly asks to close it.
+- If the browser tool cannot disconnect programmatically, say so and provide manual steps.
+
+Manual steps by mode:
+
+- Chrome DevTools MCP with `--autoConnect`: revoke/stop the DevTools MCP connection from the AI tool or MCP server, then in Chrome open `chrome://inspect/#remote-debugging` and disable remote debugging if the user enabled it only for this task.
+- Chrome DevTools MCP with `--browser-url=http://127.0.0.1:9222`: stop the Chrome process that was launched with remote debugging, or close that dedicated debugging browser window. If it was the user's normal browser, do not close it automatically; ask the user.
+- Browser-extension MCP: disconnect or disable the extension session for the current AI tool, or disable the extension if it was enabled only for this task.
+- Integrated browser fallback: close the controlled tab/session when the tool allows it, then tell the user that this was a separate browser session.
+
+Do not leave an active browser-control session silently. The final message must include one of:
+
+- "Browser connection disconnected."
+- "I could not disconnect it from here; please disconnect it by ..."
 
 ## Safety Rules
 
@@ -93,6 +117,7 @@ For GitLab, placing multiple approved comments requires saving each inline comme
 - Do not claim default-browser prefill is possible just because the URL can be opened. It is possible only if a tool can also inspect and control that browser.
 - If the visible controllable page is a sign-in page while the user's default browser is already logged in, treat the current browser tool as isolated from the true session.
 - If no tool can control the default browser, stop and say which capability is missing. Offer only the supported modes: configure true session mode, continue in fallback mode after login, or use manual mode.
+- Do not leave browser automation attached silently after prefill or publication work is done.
 
 ## Comment Text
 

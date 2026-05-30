@@ -3,7 +3,7 @@
 These files are meant to be copied into projects that want to use DiffDeck.
 
 - `skills/`: skills that teach AI agents how to push code review findings to DiffDeck.
-- `snippets/`: small instruction snippets for target project agent files.
+- `snippets/`: reference examples for target project agent files. The sync script does not copy them automatically.
 
 These files are not for developing DiffDeck itself. Internal DiffDeck development instructions live in `.agent/`.
 
@@ -43,7 +43,7 @@ Then add this note to the target project's shared agent/development instructions
 DiffDeck:
 - For AI code review, MR/PR analysis, branch analysis, or diff analysis, use `.agent/skills/diffdeck-code-review` by default, even if the user does not explicitly mention DiffDeck.
 - For browser prefill of approved comments in GitLab/GitHub, use `.agent/skills/diffdeck-browser-prefill`; retrieve the queue with `list_approved_findings` and use `suggestion` as the final human-edited comment.
-- For installing or updating DiffDeck distributed skills and snippets in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
+- For installing or updating DiffDeck distributed skills and this project's DiffDeck instruction block, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
 - For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
@@ -75,9 +75,11 @@ To only print the config:
 npm run setup:mcp:print
 ```
 
+Set `DIFFDECK_LOG_LEVEL` to tune server and MCP logs: `silent`, `error`, `info`, or `debug`. The default is `info`; repeated conversation polling logs only appear in `debug`.
+
 ## Sync Updates Later
 
-After the first manual copy, use `diffdeck-sync-distributed` from the target project to refresh DiffDeck distributed assets.
+After the first manual copy, use `diffdeck-sync-distributed` from the target project to refresh DiffDeck distributed skills and the short DiffDeck instruction block.
 
 Dry-run:
 
@@ -92,6 +94,8 @@ node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.m
 ```
 
 The script writes `.agent/diffdeck/sync-manifest.json` and skips files that changed locally since the previous sync. Use `--force` only when overwriting local edits is intentional.
+
+The script does not copy `distributed/snippets` or `mcp-config.example.json` into the target project. Those files stay in DiffDeck as examples. By default, the script updates a managed DiffDeck block in existing `AGENTS.md`, `CLAUDE.md`, or `GEMINI.md` files. If none exists, it creates `AGENTS.md`. Use `--instructions-file <PATH>` to target another project-owned instruction file, or `--skip-instructions` to sync skills only.
 
 ## DiffDeck UI Conversation
 
