@@ -37,6 +37,7 @@ Prioritize:
 - accidental publication or unsafe browser automation behavior;
 - ambiguous GitLab/GitHub action levels;
 - MCP tool contract changes;
+- MCP conversation watcher behavior, including `list_pending_conversation`, `wait_for_conversation_message`, and `add_conversation_reply`;
 - session reset/export/import safety;
 - UI layout shift or confusing destructive controls;
 - public docs leaking personal paths, private URLs, tokens, or sensitive values;

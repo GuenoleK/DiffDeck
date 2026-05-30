@@ -8,10 +8,12 @@ import "./FindingCard.scss";
 
 type FindingCardProps = {
   finding: Finding;
+  isConversationTarget?: boolean;
+  onAskAboutFinding: (finding: Finding) => void;
   onFindingChange: (patch: FindingPatchInput) => Promise<void>;
 };
 
-export function FindingCard({ finding, onFindingChange }: FindingCardProps) {
+export function FindingCard({ finding, isConversationTarget = false, onAskAboutFinding, onFindingChange }: FindingCardProps) {
   const serverComment = finding.suggestion ?? finding.explanation;
   const [comment, setComment] = useState(serverComment);
   const [savedComment, setSavedComment] = useState(serverComment);
@@ -58,7 +60,12 @@ export function FindingCard({ finding, onFindingChange }: FindingCardProps) {
         <EditableFindingComment isDirty={isDirty} value={comment} onChange={setComment} onSave={saveComment} />
       </div>
 
-      <FindingActions status={finding.status} onStatusChange={changeStatus} />
+      <FindingActions
+        isConversationTarget={isConversationTarget}
+        onAskAboutFinding={() => onAskAboutFinding(finding)}
+        status={finding.status}
+        onStatusChange={changeStatus}
+      />
     </article>
   );
 }

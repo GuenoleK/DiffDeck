@@ -1,0 +1,424 @@
+.review-diff-page {
+  display: grid;
+  grid-template-columns: minmax(14rem, 18rem) minmax(0, 1fr);
+  align-items: start;
+  gap: 0.9rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  &--empty {
+    display: block;
+  }
+
+  &__files {
+    position: sticky;
+    top: 0.75rem;
+    align-self: start;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    height: calc(100vh - 4.5rem);
+    max-height: calc(100vh - 4.5rem);
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  &__files-header,
+  &__toolbar,
+  &__tools,
+  &__mode,
+  &__file-nav,
+  &__context-toggle,
+  &__split-row,
+  &__unified-row {
+    display: flex;
+    align-items: center;
+  }
+
+  &__files-header {
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+  }
+
+  &__file-list {
+    display: grid;
+    align-content: start;
+    gap: 0.45rem;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.15rem;
+    overscroll-behavior: contain;
+  }
+
+  &__file-item {
+    display: grid;
+    gap: 0.42rem;
+    border: 1px solid var(--dd-color-border);
+    border-radius: 6px;
+    padding: 0.52rem;
+    background: var(--dd-color-surface-muted);
+  }
+
+  &__file-item--active {
+    border-color: rgba(199, 184, 138, 0.46);
+    background: rgba(199, 184, 138, 0.08);
+  }
+
+  &__file-open {
+    display: grid;
+    gap: 0.32rem;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+
+  &__file-path,
+  &__file-title,
+  &__rename {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__file-path {
+    color: var(--dd-color-text);
+    font-family: var(--dd-font-mono);
+    font-size: 0.78rem;
+    line-height: 1.35;
+  }
+
+  &__file-meta {
+    color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
+    font-size: 0.7rem;
+  }
+
+  &__context-toggle {
+    gap: 0.38rem;
+    color: var(--dd-color-text-soft);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    input {
+      accent-color: var(--dd-color-accent);
+    }
+  }
+
+  &__viewer {
+    min-width: 0;
+    max-width: 100%;
+    border: 1px solid var(--dd-color-border);
+    border-radius: 8px;
+    overflow: visible;
+    background: #090a0a;
+  }
+
+  &__toolbar {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 8;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px solid var(--dd-color-border);
+    border-radius: 8px 8px 0 0;
+    padding: 0.8rem 0.9rem;
+    background: var(--dd-color-surface-muted);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+  }
+
+  &__current-file {
+    min-width: 0;
+  }
+
+  &__kicker {
+    margin: 0 0 0.22rem;
+    color: var(--dd-color-accent);
+    font-family: var(--dd-font-mono);
+    font-size: 0.68rem;
+    font-weight: 720;
+    text-transform: uppercase;
+  }
+
+  &__file-title {
+    margin: 0;
+    color: var(--dd-color-text);
+    font-size: 0.94rem;
+    font-weight: 680;
+  }
+
+  &__rename {
+    margin: 0.22rem 0 0;
+    color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+  }
+
+  &__tools {
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  &__file-nav {
+    gap: 0.25rem;
+    border: 1px solid rgba(242, 241, 236, 0.12);
+    border-radius: 999px;
+    padding: 0.16rem;
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  &__mode {
+    gap: 0.15rem;
+    border: 1px solid rgba(242, 241, 236, 0.12);
+    border-radius: 999px;
+    padding: 0.16rem;
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  &__mode-button,
+  &__nav-button,
+  &__context-button {
+    border: 1px solid transparent;
+    min-height: 2rem;
+    color: var(--dd-color-text-muted);
+    background: transparent;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--dd-color-text);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+
+  &__nav-button {
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    width: 2rem;
+    padding: 0;
+    font-family: var(--dd-font-mono);
+    font-size: 0.9rem;
+    line-height: 1;
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.42;
+    }
+  }
+
+  &__file-position {
+    display: grid;
+    place-items: center;
+    min-width: 3.2rem;
+    color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+  }
+
+  &__mode-button {
+    border-radius: 999px;
+    padding: 0 0.68rem;
+  }
+
+  &__mode-button--active {
+    color: #08100e;
+    background: #a8ddce;
+  }
+
+  &__context-button {
+    border-color: var(--dd-color-border);
+    border-radius: 5px;
+    padding: 0 0.68rem;
+    background: rgba(242, 241, 236, 0.03);
+  }
+
+  &__split,
+  &__unified {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: visible;
+    contain: inline-size;
+    font-family: var(--dd-font-mono);
+    font-size: 0.78rem;
+    line-height: 1.55;
+  }
+
+  &__split-row {
+    display: grid;
+    grid-template-columns: 4.5rem minmax(0, 1fr) 4.5rem minmax(0, 1fr);
+    width: 100%;
+    min-width: 100%;
+  }
+
+  &__unified-row {
+    display: grid;
+    grid-template-columns: 4.5rem 1.8rem minmax(0, 1fr);
+    width: 100%;
+    min-width: 100%;
+  }
+
+  &__split-meta,
+  &__unified-meta {
+    width: 100%;
+    min-width: 100%;
+    padding: 0.33rem 0.7rem;
+    color: var(--dd-color-suggestion);
+    background: rgba(134, 168, 198, 0.12);
+    font-family: var(--dd-font-mono);
+    font-size: 0.74rem;
+  }
+
+  &__split-row,
+  &__unified-row {
+    border-top: 1px solid rgba(242, 241, 236, 0.035);
+  }
+
+  &__split-row--change,
+  &__unified-row--delete,
+  &__unified-row--add {
+    background: rgba(215, 166, 95, 0.045);
+  }
+
+  &__split-row--delete,
+  &__unified-row--delete {
+    background: rgba(224, 111, 119, 0.1);
+  }
+
+  &__split-row--add,
+  &__unified-row--add {
+    background: rgba(141, 187, 143, 0.11);
+  }
+
+  &__line-number {
+    display: grid;
+    place-items: center;
+    align-self: stretch;
+    border: 0;
+    border-right: 1px solid rgba(242, 241, 236, 0.06);
+    min-width: 0;
+    padding: 0.14rem 0.45rem;
+    color: var(--dd-color-text-muted);
+    background: rgba(255, 255, 255, 0.018);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+    text-align: right;
+
+    &:is(button) {
+      cursor: pointer;
+    }
+
+    &:is(button):hover,
+    &--selected {
+      color: #08100e;
+      background: var(--dd-color-accent);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: inset var(--dd-focus-ring);
+    }
+  }
+
+  &__prefix {
+    display: grid;
+    place-items: center;
+    color: var(--dd-color-text-muted);
+    background: rgba(255, 255, 255, 0.018);
+  }
+
+  &__code-cell {
+    min-width: 0;
+    padding: 0.14rem 0.72rem;
+    color: #d8d6ce;
+    overflow-wrap: anywhere;
+    tab-size: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__empty {
+    display: grid;
+    justify-items: start;
+    gap: 0.7rem;
+    border: 1px dashed var(--dd-color-border-strong);
+    border-radius: var(--dd-radius-card);
+    min-height: 16rem;
+    padding: 2.2rem;
+    background: var(--dd-color-surface-muted);
+  }
+
+  &__empty-title,
+  &__empty-text {
+    margin: 0;
+  }
+
+  &__empty-text {
+    max-width: 34rem;
+    color: var(--dd-color-text-muted);
+    line-height: 1.55;
+  }
+}
+
+@media (max-width: 940px) {
+  .review-diff-page {
+    grid-template-columns: 1fr;
+
+    &__files {
+      position: static;
+      height: auto;
+      max-height: 18rem;
+    }
+
+    &__toolbar {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    &__tools {
+      justify-content: flex-start;
+    }
+
+    &__toolbar {
+      top: 0.5rem;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .review-diff-page {
+    &__tools,
+    &__mode {
+      width: 100%;
+    }
+
+    &__mode-button,
+    &__context-button {
+      flex: 1 1 8rem;
+    }
+  }
+}

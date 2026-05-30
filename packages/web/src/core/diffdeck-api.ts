@@ -1,7 +1,11 @@
 import type {
+  ConversationMessageDraftInput,
   Finding,
   FindingPatchInput,
   Review,
+  ReviewConversationMessage,
+  ReviewFileDiff,
+  ReviewFileDiffDraftInput,
   ReviewPatchInput,
   ReviewSession,
   ReviewSnapshot,
@@ -88,6 +92,46 @@ export async function getApprovedFindings(): Promise<Finding[]> {
 
   if (!response.ok) {
     throw new Error("Unable to load approved findings");
+  }
+
+  return response.json();
+}
+
+export async function addFileDiff(input: ReviewFileDiffDraftInput): Promise<ReviewFileDiff> {
+  const response = await fetch(`${apiUrl}/reviews/active/file-diffs`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to add file diff: ${response.status} ${await response.text()}`);
+  }
+
+  return response.json();
+}
+
+export async function addConversationMessage(input: ConversationMessageDraftInput): Promise<ReviewConversationMessage> {
+  const response = await fetch(`${apiUrl}/reviews/active/conversation`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to add conversation message: ${response.status} ${await response.text()}`);
+  }
+
+  return response.json();
+}
+
+export async function clearConversation(): Promise<ReviewSnapshot> {
+  const response = await fetch(`${apiUrl}/reviews/active/conversation`, {
+    method: "DELETE",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Unable to clear conversation: ${response.status} ${await response.text()}`);
   }
 
   return response.json();

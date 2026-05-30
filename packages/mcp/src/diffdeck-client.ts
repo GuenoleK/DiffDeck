@@ -1,4 +1,10 @@
-import type { FindingDraftInput } from "@diffdeck/core";
+import type {
+  FindingDraftInput,
+  ReviewConversationMessage,
+  ReviewFileDiff,
+  ReviewFileDiffDraftInput,
+  ReviewSnapshot,
+} from "@diffdeck/core";
 
 const defaultBaseUrl = "http://127.0.0.1:4337/api";
 
@@ -11,6 +17,10 @@ export class DiffDeckClient {
       sourceUrl: input.sourceUrl,
       repositoryPath: input.repositoryPath,
     });
+  }
+
+  async getActiveReview(): Promise<ReviewSnapshot> {
+    return this.get("/reviews/active");
   }
 
   async resetReview() {
@@ -26,22 +36,81 @@ export class DiffDeckClient {
   }
 
   async listFindings() {
-    const response = await fetch(`${this.baseUrl}/reviews/active/findings`);
-    return response.json();
+    return this.get("/reviews/active/findings");
   }
 
   async listApprovedFindings() {
-    const response = await fetch(`${this.baseUrl}/reviews/active/approved-findings`);
-    return response.json();
+    return this.get("/reviews/active/approved-findings");
+  }
+
+  async addFileDiff(input: ReviewFileDiffDraftInput): Promise<ReviewFileDiff> {
+    return this.post("/reviews/active/file-diffs", input);
+  }
+
+  async replaceFileDiffs(input: ReviewFileDiffDraftInput[]): Promise<ReviewFileDiff[]> {
+    return this.put("/reviews/active/file-diffs", input);
+  }
+
+  async listFileDiffs(): Promise<ReviewFileDiff[]> {
+    return this.get("/reviews/active/file-diffs");
+  }
+
+  async listConversationMessages() {
+    return this.get("/reviews/active/conversation");
+  }
+
+  async listPendingConversationMessages(): Promise<ReviewConversationMessage[]> {
+    return this.get("/reviews/active/conversation/pending");
+  }
+
+  async addConversationReply(input: {
+    body: string;
+    isReviewAttached?: boolean;
+    relatedMessageId?: string;
+    relatedFindingId?: string;
+    relatedFilePath?: string;
+    relatedFilePaths?: string[];
+    relatedLine?: number;
+    relatedLineSide?: "old" | "new";
+    agentName?: string;
+  }) {
+    return this.post("/reviews/active/conversation", {
+      ...input,
+      role: "agent",
+    });
   }
 
   async markReadyForHumanReview() {
     return this.post("/reviews/active/ready", {});
   }
 
+  private async get(path: string) {
+    const response = await fetch(`${this.baseUrl}${path}`);
+
+    if (!response.ok) {
+      throw new Error(`DiffDeck API error ${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
+  }
+
   private async post(path: string, body: unknown) {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      throw new Error(`DiffDeck API error ${response.status}: ${await response.text()}`);
+    }
+
+    return response.json();
+  }
+
+  private async put(path: string, body: unknown) {
+    const response = await fetch(`${this.baseUrl}${path}`, {
+      method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });

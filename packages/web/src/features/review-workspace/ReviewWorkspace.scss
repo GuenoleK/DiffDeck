@@ -1,7 +1,15 @@
 .review-workspace {
-  width: min(1180px, calc(100% - 2rem));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 1rem;
+  width: min(1700px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 1.6rem 0 4rem;
+
+  &__main {
+    min-width: 0;
+  }
 
   &__header {
     display: flex;
@@ -139,6 +147,65 @@
     font-size: 0.82rem;
   }
 
+  &__view-switch {
+    display: inline-grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.16rem;
+    border: 1px solid rgba(242, 241, 236, 0.12);
+    border-radius: 999px;
+    padding: 0.16rem;
+    background: rgba(0, 0, 0, 0.28);
+  }
+
+  &__view-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    border: 0;
+    border-radius: 999px;
+    min-height: 2rem;
+    min-width: 6.6rem;
+    padding: 0 0.7rem;
+    color: var(--dd-color-text-muted);
+    background: transparent;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 720;
+    cursor: pointer;
+
+    span {
+      display: inline-grid;
+      place-items: center;
+      min-width: 1.35rem;
+      min-height: 1.35rem;
+      border: 1px solid rgba(242, 241, 236, 0.12);
+      border-radius: 999px;
+      padding: 0 0.32rem;
+      font-family: var(--dd-font-mono);
+      font-size: 0.68rem;
+    }
+
+    &:hover {
+      color: var(--dd-color-text);
+      background: rgba(242, 241, 236, 0.06);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+
+  &__view-button--active {
+    color: #08100e;
+    background: #a8ddce;
+
+    span {
+      border-color: rgba(8, 16, 14, 0.26);
+    }
+  }
+
   &__content {
     display: grid;
     gap: 0.85rem;
@@ -167,9 +234,11 @@
   }
 }
 
-@media (max-width: 880px) {
+@media (max-width: 1120px) {
   .review-workspace {
+    grid-template-columns: 1fr;
     padding-top: 0.85rem;
+    padding-bottom: 22rem;
 
     &__header {
       align-items: stretch;
@@ -187,6 +256,12 @@
   }
 }
 
+@media (max-width: 880px) {
+  .review-workspace {
+    padding-bottom: 21rem;
+  }
+}
+
 @media (max-width: 560px) {
   .review-workspace {
     width: min(100% - 1rem, 1240px);
@@ -198,6 +273,12 @@
     &__deck-header {
       align-items: stretch;
       flex-direction: column;
+    }
+
+    &__view-switch {
+      grid-template-columns: 1fr;
+      border-radius: 8px;
+      width: 100%;
     }
   }
 }

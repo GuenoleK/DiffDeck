@@ -81,6 +81,7 @@ function buildDiffDeckMcpConfig() {
     args: [mcpEntryPoint],
     env: {
       DIFFDECK_API_URL: defaultApiUrl,
+      DIFFDECK_LOG_LEVEL: "info",
     },
   };
 }
@@ -244,6 +245,7 @@ startup_timeout_sec = 120
 
 [mcp_servers.diffdeck.env]
 DIFFDECK_API_URL = ${JSON.stringify(defaultApiUrl)}
+DIFFDECK_LOG_LEVEL = "info"
 `;
 }
 

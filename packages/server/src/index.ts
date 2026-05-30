@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { serve } from "@hono/node-server";
 import { createApp } from "./app.js";
+import { logger } from "./logger.js";
 
 export type StartServerOptions = {
   port?: number;
@@ -18,7 +19,7 @@ export const startServer = (options: StartServerOptions = {}) => {
     port,
   });
 
-  console.log(`DiffDeck API listening on http://${hostname}:${port}`);
+  logger.info(`DiffDeck API listening on http://${hostname}:${port}`);
   return server;
 };
 
