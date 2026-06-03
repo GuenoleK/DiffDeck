@@ -127,3 +127,5 @@ Review branch feature/dose-validation against dev with DiffDeck. Context: implem
 ```
 
 If the target branch is missing, the agent should ask for it before analyzing.
+
+For MR/PR and branch reviews, findings should stay scoped to files present in the reviewed diff. Agents may read files outside the diff for context, but should not publish out-of-diff findings unless the user explicitly asks for a broader audit.

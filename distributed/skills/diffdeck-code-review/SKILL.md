@@ -242,6 +242,17 @@ Each DiffDeck finding should include:
 - `confidence`: `low`, `medium`, or `high`.
 - `agentName`: the current AI tool name when known.
 
+## Review Scope Rules
+
+For pull request, merge request, branch, or diff reviews, keep findings strictly scoped to the reviewed diff:
+
+- Only create findings on files that are present in the reviewed diff.
+- Read files outside the diff only as supporting context to understand changed code.
+- Do not create a finding whose primary location is outside the diff, even when the issue looks real.
+- If a context file outside the diff reveals a risk, comment only when the risk is directly introduced or worsened by a changed line, and anchor the finding on the changed file/line that causes it.
+- Do not turn preexisting issues outside the diff into review findings. Mention them only in the chat summary as "preexisting context" when useful, unless the user explicitly asks for a broader audit.
+- Before calling `add_finding`, verify that `filePath` belongs to the reviewed diff file list. If it does not, skip the finding or re-anchor it on the changed file that introduces the issue.
+
 ## File Diff Rules
 
 For local Git reviews, prefer `sync_git_file_diffs` with the target/base ref. This is mandatory when available for requests like "review the current branch against main" or "analyze local changes against dev", because findings and file diffs should appear together in DiffDeck. Each call replaces the active review's current Git file-diff set, so files removed from the latest Git diff disappear from the UI.
@@ -263,7 +274,7 @@ Do not invent diff content. If only a finding snippet is known, add the finding 
 ## Review Discipline
 
 - Focus on bugs, regressions, security, data loss, broken behavior, maintainability risks, missing tests, and unclear assumptions.
-- Do not report preexisting issues as blocking findings unless the user asks for a global audit.
+- Do not report preexisting issues as findings unless the user asks for a global audit.
 - Prefer fewer, stronger findings over many speculative ones.
 - Use `question` when business context is missing.
 - Use `praise` only for genuinely useful positive review comments.

@@ -251,6 +251,8 @@ Expected agent behavior:
 
 This same workflow also works for local changes or a standalone diff file. The important part is that the review scope and target baseline are explicit.
 
+For MR/PR and branch reviews, findings should stay scoped to files present in the reviewed diff. Agents may read files outside the diff for context, but should not publish out-of-diff findings unless the user explicitly asks for a broader audit.
+
 ## Session Handoff
 
 The MVP stores data in memory. Before stopping the API server, use the `Session` panel in the UI to copy a `diffdeck.session.v1` resume pack. Paste that pack back into the same panel later to restore the review and let DiffDeck format it back into cards.

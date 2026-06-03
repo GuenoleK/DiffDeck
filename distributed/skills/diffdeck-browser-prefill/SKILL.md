@@ -111,6 +111,9 @@ Do not leave an active browser-control session silently. The final message must 
 - Do not click `Start a review` for GitLab level 1. For level 2, `Start a review` and `Add to review` are allowed because they create drafts, but publishing/submitting remains forbidden without explicit confirmation.
 - Never click `Add comment now`, `Submit review`, `Publish`, `Merge`, or any final publication action unless the user explicitly requested GitLab level 3.
 - If the file or line cannot be found, do not guess silently. Report the mismatch.
+- For MR/PR publication, do not publish approved findings whose `filePath` is not present in the platform diff. Treat them as out of scope for inline review comments and report them back to the user instead.
+- Do not automatically fall back from an inline/diff comment to a general MR/PR note. A general note is allowed only when the user explicitly approves that fallback for the specific finding or asks for manual/general publication.
+- When a requested line is not directly commentable, verify whether GitLab/GitHub exposes a nearby changed or context line in the same diff hunk. Use that nearby line only when the finding still clearly refers to that hunk; otherwise stop and report the mismatch.
 - Keep the human in control of final wording and publication.
 - Prefer platform draft modes when available.
 - When using the OS default browser, do not ask the user to reauthenticate in an integrated browser if their normal browser is already logged in.
