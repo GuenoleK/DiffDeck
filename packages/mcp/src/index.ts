@@ -23,6 +23,18 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
+const usageConfidenceSchema = z.enum(["exact", "estimated", "observed", "unavailable"]);
+const tokenUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
+  totalTokens: z.number().int().nonnegative().optional(),
+  cachedInputTokens: z.number().int().nonnegative().optional(),
+  reasoningTokens: z.number().int().nonnegative().optional(),
+  estimatedCostUsd: z.number().nonnegative().optional(),
+  confidence: usageConfidenceSchema,
+  note: z.string().optional(),
+});
+
 server.tool(
   "create_review",
   "Create a new DiffDeck review and make it the active review.",
@@ -47,6 +59,27 @@ server.tool(
     const snapshot = await client.resetReview();
     return {
       content: [{ type: "text", text: JSON.stringify(snapshot, null, 2) }],
+    };
+  },
+);
+
+server.tool(
+  "record_usage",
+  "Record token usage for the active DiffDeck review. Use exact provider counters when available; otherwise mark provider totals unavailable so DiffDeck can add observed local estimates from stored review payloads.",
+  {
+    provider: z.string().optional(),
+    model: z.string().optional(),
+    agentName: z.string().optional(),
+    total: tokenUsageSchema,
+    diffdeck: tokenUsageSchema.optional(),
+    project: tokenUsageSchema.optional(),
+    other: tokenUsageSchema.optional(),
+    note: z.string().optional(),
+  },
+  async (input) => {
+    const usage = await client.setReviewUsage(input);
+    return {
+      content: [{ type: "text", text: JSON.stringify(usage, null, 2) }],
     };
   },
 );

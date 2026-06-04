@@ -154,12 +154,14 @@ I can run the Codex setup from the DiffDeck repository if you confirm its locati
 5. Ask whether the user wants to provide ticket or business context before the review. If they provide it, use it and prepare a short functional summary for DiffDeck. If they decline or ask to proceed, continue without it and mention that the review is code-context-only.
 6. Inspect the diff, branch, pull request, merge request, or local changes.
 7. Read surrounding files only when needed to confirm a concrete risk.
-8. Create or reuse a DiffDeck review.
-9. If ticket information, acceptance criteria, business rules, or functional context were provided, call `set_review_context` with a concise summary for the UI side panel.
-10. For local Git reviews, call `sync_git_file_diffs` with the target/base ref so the UI file-diff page is filled automatically. If `sync_git_file_diffs` is unavailable but unified diff content is available, call `add_file_diff` once per processed file.
-11. Push one structured finding per actionable review comment.
-12. Mark the review ready for human review.
-13. End with a concise chat summary of the most important risks, uncertainties, and next steps.
+8. Do not run builds, compilation, or tests automatically during the review. Propose relevant verification commands in the final summary. Run them only when the user explicitly asks, or when a compilation/runtime doubt is central to confirming a finding; in that case, say what you are going to run and why before running it.
+9. Create or reuse a DiffDeck review.
+10. If ticket information, acceptance criteria, business rules, or functional context were provided, call `set_review_context` with a concise summary for the UI side panel.
+11. For local Git reviews, call `sync_git_file_diffs` with the target/base ref so the UI file-diff page is filled automatically. If `sync_git_file_diffs` is unavailable but unified diff content is available, call `add_file_diff` once per processed file.
+12. Push one structured finding per actionable review comment.
+13. Call `record_usage` near the end of the review. Use exact provider totals when the current AI tool exposes them; otherwise mark provider totals `unavailable` so DiffDeck can add observed local estimates. Mark DiffDeck, project, and other/host attribution as `exact`, `estimated`, `observed`, or `unavailable`.
+14. Mark the review ready for human review.
+15. End with a concise chat summary of the most important risks, uncertainties, verification commands not run, and next steps.
 
 ## Conversation Follow-Up
 
@@ -183,6 +185,8 @@ If the user asks you to watch the DiffDeck chat, stay connected, or answer UI me
 The watcher is explicit: DiffDeck stores UI messages locally, but it does not wake an AI provider by itself. A connected agent must be running and using the MCP conversation tools.
 
 Do not call an AI provider from DiffDeck directly; the current AI tool is responsible for reasoning with its configured model and subscriptions.
+
+Store usage with `record_usage`. Do not invent exact provider totals; use `unavailable` when the tool does not expose a value. DiffDeck can add observed local estimates from stored review payloads, and attribution derived from visible prompts, files, MCP payloads, or conversation content should be marked `estimated` or `observed` rather than `exact`.
 
 ## Resetting A DiffDeck Session
 
@@ -278,6 +282,7 @@ Do not invent diff content. If only a finding snippet is known, add the finding 
 - Prefer fewer, stronger findings over many speculative ones.
 - Use `question` when business context is missing.
 - Use `praise` only for genuinely useful positive review comments.
+- Do not use local build, compilation, or test execution as a default review step. Mention useful commands in the chat summary unless the user explicitly asked you to run them.
 - Never publish comments to GitLab, GitHub, Bitbucket, or another platform without explicit human approval.
 - Do not include personal local paths, secrets, API keys, tokens, passwords, or sensitive environment values in DiffDeck findings or chat summaries.
 

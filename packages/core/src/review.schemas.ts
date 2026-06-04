@@ -108,11 +108,38 @@ export const ConversationMessageSchema = ConversationMessageDraftSchema.extend({
   createdAt: z.string().min(1),
 });
 
+export const ReviewTokenUsageSchema = z.object({
+  inputTokens: z.number().int().nonnegative().optional(),
+  outputTokens: z.number().int().nonnegative().optional(),
+  totalTokens: z.number().int().nonnegative().optional(),
+  cachedInputTokens: z.number().int().nonnegative().optional(),
+  reasoningTokens: z.number().int().nonnegative().optional(),
+  estimatedCostUsd: z.number().nonnegative().optional(),
+  confidence: z.enum(["exact", "estimated", "observed", "unavailable"]),
+  note: z.string().optional(),
+});
+
+export const ReviewUsageDraftSchema = z.object({
+  provider: z.string().min(1).optional(),
+  model: z.string().min(1).optional(),
+  agentName: z.string().min(1).optional(),
+  total: ReviewTokenUsageSchema,
+  diffdeck: ReviewTokenUsageSchema.optional(),
+  project: ReviewTokenUsageSchema.optional(),
+  other: ReviewTokenUsageSchema.optional(),
+  note: z.string().optional(),
+});
+
+export const ReviewUsageSchema = ReviewUsageDraftSchema.extend({
+  recordedAt: z.string().min(1),
+});
+
 export const ReviewSnapshotSchema = z.object({
   review: ReviewSchema,
   findings: z.array(FindingSchema),
   fileDiffs: z.array(ReviewFileDiffSchema).default([]),
   conversation: z.array(ConversationMessageSchema).default([]),
+  usage: ReviewUsageSchema.optional(),
 });
 
 export const ReviewSessionSchema = z.object({
@@ -127,4 +154,5 @@ export type FindingDraftInput = z.infer<typeof FindingDraftSchema>;
 export type FindingPatchInput = z.infer<typeof FindingPatchSchema>;
 export type ReviewFileDiffDraftInput = z.infer<typeof ReviewFileDiffDraftSchema>;
 export type ConversationMessageDraftInput = z.infer<typeof ConversationMessageDraftSchema>;
+export type ReviewUsageDraftInput = z.infer<typeof ReviewUsageDraftSchema>;
 export type ReviewSessionInput = z.infer<typeof ReviewSessionSchema>;

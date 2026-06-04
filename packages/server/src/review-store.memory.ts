@@ -8,8 +8,10 @@ import type {
   ReviewSession,
   ReviewSessionInput,
   ReviewPatchInput,
+  ReviewUsageDraftInput,
 } from "@diffdeck/core";
-import type { Finding, Review, ReviewConversationMessage, ReviewFileDiff, ReviewSnapshot } from "@diffdeck/core";
+import type { Finding, Review, ReviewConversationMessage, ReviewFileDiff, ReviewSnapshot, ReviewUsage } from "@diffdeck/core";
+import { addObservedUsageEstimates } from "./review-usage-estimates.js";
 
 const nowIso = () => new Date().toISOString();
 
@@ -18,6 +20,7 @@ export class MemoryReviewStore {
   private findings = new Map<string, Finding>();
   private fileDiffs = new Map<string, ReviewFileDiff>();
   private conversation = new Map<string, ReviewConversationMessage>();
+  private usage: ReviewUsage | undefined;
 
   getOrCreateActiveReview(): Review {
     if (this.activeReview) {
@@ -44,6 +47,7 @@ export class MemoryReviewStore {
     this.findings.clear();
     this.fileDiffs.clear();
     this.conversation.clear();
+    this.usage = undefined;
     return review;
   }
 
@@ -177,6 +181,25 @@ export class MemoryReviewStore {
     return this.snapshot();
   }
 
+  setUsage(input: ReviewUsageDraftInput): ReviewUsage {
+    const review = this.getOrCreateActiveReview();
+    const timestamp = nowIso();
+    const usageInput = addObservedUsageEstimates(input, this.snapshot());
+    this.activeReview = {
+      ...review,
+      updatedAt: timestamp,
+    };
+    this.usage = {
+      ...usageInput,
+      recordedAt: timestamp,
+    };
+    return this.usage;
+  }
+
+  getUsage(): ReviewUsage | undefined {
+    return this.usage;
+  }
+
   exportSession(): ReviewSession {
     return {
       format: "diffdeck.session.v1",
@@ -201,6 +224,7 @@ export class MemoryReviewStore {
     }));
 
     this.activeReview = review;
+    this.usage = session.snapshot.usage;
     this.findings.clear();
     this.fileDiffs.clear();
     this.conversation.clear();
@@ -215,6 +239,7 @@ export class MemoryReviewStore {
     this.findings.clear();
     this.fileDiffs.clear();
     this.conversation.clear();
+    this.usage = undefined;
     return this.snapshot();
   }
 
@@ -224,6 +249,7 @@ export class MemoryReviewStore {
       findings: this.listFindings(),
       fileDiffs: this.listFileDiffs(),
       conversation: this.listConversationMessages(),
+      usage: this.usage,
     };
   }
 }

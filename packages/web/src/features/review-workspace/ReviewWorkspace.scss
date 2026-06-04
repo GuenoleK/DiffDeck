@@ -13,19 +13,31 @@
 
   &__header {
     display: flex;
-    align-items: start;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 1.5rem;
+    gap: 1rem;
     margin-bottom: 1.35rem;
     padding-bottom: 1.25rem;
     border-bottom: 1px solid var(--dd-color-border);
   }
 
-  &__header-actions {
+  &__review-overview {
+    display: grid;
+    gap: 0.78rem;
+    width: min(100%, 42rem);
+    min-width: 0;
+  }
+
+  &__review-controls {
+    display: grid;
+    align-content: start;
+    gap: 0.65rem;
+    min-width: min(100%, 25rem);
+  }
+
+  &__button-row {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
     gap: 0.65rem;
   }
 
@@ -241,13 +253,13 @@
     padding-bottom: 22rem;
 
     &__header {
-      align-items: stretch;
       flex-direction: column;
       padding-bottom: 1rem;
     }
 
-    &__header-actions {
-      justify-content: flex-start;
+    &__review-overview,
+    &__review-controls {
+      width: 100%;
     }
 
     &__subtitle {
@@ -268,6 +280,10 @@
 
     &__tool-button {
       flex: 1 1 6rem;
+    }
+
+    &__button-row {
+      width: 100%;
     }
 
     &__deck-header {

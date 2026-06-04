@@ -215,6 +215,7 @@ Available MCP tools:
 - `add_finding`
 - `list_findings`
 - `list_approved_findings`
+- `record_usage`
 - `list_conversation`
 - `list_pending_conversation`
 - `wait_for_conversation_message`
@@ -227,6 +228,10 @@ Conversation tools:
 - `list_pending_conversation`: read human UI messages that do not have an agent reply yet.
 - `wait_for_conversation_message`: poll DiffDeck for a pending human UI message and return when one arrives.
 - `add_conversation_reply`: send the agent's answer back into the UI conversation.
+
+Usage tools:
+
+- `record_usage`: store token usage for the active review. Provider totals may be exact when the AI tool exposes them; otherwise mark them `unavailable` and DiffDeck will add observed local estimates from stored review payloads. DiffDeck/project/host attribution should be marked as `exact`, `estimated`, `observed`, or `unavailable`.
 
 ## Review A Branch Before A PR Or MR Exists
 
@@ -271,6 +276,8 @@ This is a copy/paste safety net for the in-memory MVP. It is not a secret store,
 Use the conversation block in the main workspace to chat with the agent from DiffDeck. Each message stays local and can be attached to the active review, scoped to a specific finding, or detached when the conversation is not about the current review.
 
 An AI tool that has the DiffDeck MCP server configured can then call `list_conversation`, answer with its own model subscription and project context, and push the reply back with `add_conversation_reply`. Replies should preserve `isReviewAttached` when they answer an attached review question. DiffDeck does not call an AI provider directly.
+
+Agents should call `record_usage` near the end of a review so the workspace shows total usage plus DiffDeck, project, and host attribution. Treat attribution as a transparency aid, not a billing guarantee: provider totals may be exact when the AI tool exposes them, but DiffDeck fills missing local counts only from observed review payloads.
 
 The chat is therefore a local inbox for connected agents, not an automatic hosted chatbot. To get answers:
 

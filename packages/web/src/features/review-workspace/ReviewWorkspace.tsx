@@ -18,6 +18,7 @@ import { ReviewConversationPanel } from "./components/ReviewConversationPanel/Re
 import { ReviewContextPanel } from "./components/ReviewContextPanel/ReviewContextPanel.js";
 import { ReviewSharePanel } from "./components/ReviewSharePanel/ReviewSharePanel.js";
 import { ReviewSummary } from "./components/ReviewSummary/ReviewSummary.js";
+import { ReviewUsageSummary } from "./components/ReviewUsageSummary/ReviewUsageSummary.js";
 import { SessionHandoffPanel } from "./components/SessionHandoffPanel/SessionHandoffPanel.js";
 import "./ReviewWorkspace.scss";
 
@@ -73,41 +74,46 @@ export function ReviewWorkspace() {
     <section className="review-workspace">
       <div className="review-workspace__main">
         <header className="review-workspace__header">
-        <div className="review-workspace__identity">
-          <div className="review-workspace__heading">
-            <p className="review-workspace__eyebrow">DiffDeck</p>
-            <h1 className="review-workspace__title">{snapshot?.review.title ?? "Review workspace"}</h1>
-            <p className="review-workspace__subtitle">{reviewTarget}</p>
+          <div className="review-workspace__review-overview">
+            <div className="review-workspace__identity">
+              <div className="review-workspace__heading">
+                <p className="review-workspace__eyebrow">DiffDeck</p>
+                <h1 className="review-workspace__title">{snapshot?.review.title ?? "Review workspace"}</h1>
+                <p className="review-workspace__subtitle">{reviewTarget}</p>
+              </div>
+            </div>
+            {snapshot ? (
+              <div className="review-workspace__review-controls">
+                <div className="review-workspace__button-row">
+                  <button
+                    className={`review-workspace__tool-button ${
+                      hasContext ? "review-workspace__tool-button--has-context" : ""
+                    }`}
+                    onClick={() => setIsContextOpen(true)}
+                    type="button"
+                  >
+                    Context
+                  </button>
+                  <button
+                    className="review-workspace__tool-button"
+                    onClick={() => setIsSessionOpen(true)}
+                    type="button"
+                  >
+                    Session
+                  </button>
+                  <button
+                    className="review-workspace__tool-button review-workspace__tool-button--danger"
+                    onClick={() => setIsResetOpen(true)}
+                    type="button"
+                  >
+                    Reset
+                  </button>
+                </div>
+                <ReviewSummary snapshot={snapshot} />
+              </div>
+            ) : null}
           </div>
-        </div>
-        {snapshot ? (
-          <div className="review-workspace__header-actions">
-            <button
-              className={`review-workspace__tool-button ${
-                hasContext ? "review-workspace__tool-button--has-context" : ""
-              }`}
-              onClick={() => setIsContextOpen(true)}
-              type="button"
-            >
-              Context
-            </button>
-            <button
-              className="review-workspace__tool-button"
-              onClick={() => setIsSessionOpen(true)}
-              type="button"
-            >
-              Session
-            </button>
-            <button
-              className="review-workspace__tool-button review-workspace__tool-button--danger"
-              onClick={() => setIsResetOpen(true)}
-              type="button"
-            >
-              Reset
-            </button>
-            <ReviewSummary snapshot={snapshot} />
-          </div>
-        ) : null}
+          {snapshot ? <ReviewUsageSummary usage={snapshot.usage} /> : null}
         </header>
 
         {snapshot ? (

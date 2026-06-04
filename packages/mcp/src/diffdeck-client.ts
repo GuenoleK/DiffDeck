@@ -4,6 +4,8 @@ import type {
   ReviewFileDiff,
   ReviewFileDiffDraftInput,
   ReviewSnapshot,
+  ReviewUsage,
+  ReviewUsageDraftInput,
 } from "@diffdeck/core";
 
 const defaultBaseUrl = "http://127.0.0.1:4337/api";
@@ -29,6 +31,10 @@ export class DiffDeckClient {
 
   async updateReviewContext(input: { contextSummary: string }) {
     return this.patch("/reviews/active", input);
+  }
+
+  async setReviewUsage(input: ReviewUsageDraftInput): Promise<ReviewUsage> {
+    return this.put("/reviews/active/usage", input);
   }
 
   async addFinding(input: FindingDraftInput) {

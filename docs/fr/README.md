@@ -200,6 +200,8 @@ Le chat principal permet d'ajouter une question à la session. Une question peut
 
 DiffDeck ne contacte pas directement un fournisseur IA. L'outil IA configuré avec MCP utilise son propre abonnement et son propre contexte projet, lit la conversation avec `list_conversation` ou `list_pending_conversation`, peut attendre une question avec `wait_for_conversation_message`, puis renvoie la réponse dans l'UI avec `add_conversation_reply`.
 
+L'agent peut appeler `record_usage` en fin de revue. Si l'outil IA expose ses compteurs de tokens, il les enregistre; sinon il marque le total fournisseur comme `unavailable` et DiffDeck ajoute des estimations locales à partir des payloads de revue observés. L'interface affiche alors la consommation totale et une attribution DiffDeck / projet / hote avec un niveau de confiance : `exact`, `estimated`, `observed` ou `unavailable`. Cette attribution sert d'aide de transparence, pas de garantie de facturation.
+
 Pour obtenir une reponse dans l'interface, il faut donc garder un agent ouvert cote outil IA et lui demander explicitement de traiter ou surveiller le chat DiffDeck, par exemple : `Surveille le chat DiffDeck avec wait_for_conversation_message, reponds a la question humaine en attente, puis ajoute la reponse avec add_conversation_reply. Repete jusqu'a ce que je te demande d'arreter.`
 
 Si la configuration MCP vient d'etre ajoutee ou modifiee, redemarre l'outil IA pour qu'il recharge le serveur MCP DiffDeck.

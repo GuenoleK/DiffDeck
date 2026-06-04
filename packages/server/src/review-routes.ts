@@ -7,6 +7,7 @@ import {
   ReviewFileDiffDraftSchema,
   ReviewPatchSchema,
   ReviewSessionSchema,
+  ReviewUsageDraftSchema,
 } from "@diffdeck/core";
 import { logger } from "./logger.js";
 import { isLocalRequestHost, isTrustedOpenUrlRequest, openUrlInDefaultBrowser, parseOpenableUrl } from "./open-url.js";
@@ -75,6 +76,16 @@ reviewRoutes.patch("/reviews/active", async (context) => {
   const body = await context.req.json();
   const patch = ReviewPatchSchema.parse(body);
   return context.json(reviewStore.updateActiveReview(patch));
+});
+
+reviewRoutes.get("/reviews/active/usage", (context) => {
+  return context.json(reviewStore.getUsage() ?? null);
+});
+
+reviewRoutes.put("/reviews/active/usage", async (context) => {
+  const body = await context.req.json();
+  const input = ReviewUsageDraftSchema.parse(body);
+  return context.json(reviewStore.setUsage(input));
 });
 
 reviewRoutes.get("/reviews/active/findings", (context) => {

@@ -1,16 +1,18 @@
 .review-summary {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 0;
   border: 1px solid var(--dd-color-border);
   border-radius: 6px;
+  width: 100%;
   background: var(--dd-color-surface-muted);
 
   &__item {
     display: grid;
+    flex: 1 1 0;
     gap: 0.1rem;
-    min-width: 5.7rem;
+    min-width: 0;
     padding: 0.55rem 0.7rem;
     color: var(--dd-color-text-muted);
     text-align: left;
@@ -34,7 +36,7 @@
   }
 
   &__item--status {
-    min-width: 7.5rem;
+    min-width: 0;
   }
 
   &__item--status &__value {
@@ -44,6 +46,7 @@
 
 @media (max-width: 560px) {
   .review-summary {
+    flex-wrap: wrap;
     width: 100%;
     justify-content: stretch;
 

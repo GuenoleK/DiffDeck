@@ -14,6 +14,7 @@ export type ReviewStatus = "draft" | "ready_for_human_review" | "closed";
 export type ConversationRole = "human" | "agent";
 export type ReviewFileStatus = "added" | "modified" | "deleted" | "renamed" | "copied" | "unchanged";
 export type ReviewLineSide = "old" | "new";
+export type ReviewUsageConfidence = "exact" | "estimated" | "observed" | "unavailable";
 
 export type FindingLocation = {
   filePath: string;
@@ -82,11 +83,35 @@ export type ReviewConversationMessage = {
   createdAt: string;
 };
 
+export type ReviewTokenUsage = {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+  cachedInputTokens?: number;
+  reasoningTokens?: number;
+  estimatedCostUsd?: number;
+  confidence: ReviewUsageConfidence;
+  note?: string;
+};
+
+export type ReviewUsage = {
+  provider?: string;
+  model?: string;
+  agentName?: string;
+  total: ReviewTokenUsage;
+  diffdeck?: ReviewTokenUsage;
+  project?: ReviewTokenUsage;
+  other?: ReviewTokenUsage;
+  recordedAt: string;
+  note?: string;
+};
+
 export type ReviewSnapshot = {
   review: Review;
   findings: Finding[];
   fileDiffs: ReviewFileDiff[];
   conversation: ReviewConversationMessage[];
+  usage?: ReviewUsage;
 };
 
 export type ReviewSession = {

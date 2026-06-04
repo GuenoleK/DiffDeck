@@ -12,8 +12,9 @@ Use `DIFFDECK_LOG_LEVEL` to tune server and MCP logs: `silent`, `error`, `info`,
 4. If ticket or functional rules are available, set a concise review context summary.
 5. Push processed file diffs when the agent has unified diff content available.
 6. Push each finding as structured data.
-7. Mark the review ready for human review.
-8. Summarize the analysis in chat.
+7. Call `record_usage` near the end of the review. Use exact provider totals when the AI tool exposes them; otherwise mark provider totals as `unavailable` so DiffDeck can still add observed local estimates from stored review payloads. Clearly mark DiffDeck, project, and other/host attribution as `exact`, `estimated`, `observed`, or `unavailable`.
+8. Mark the review ready for human review.
+9. Summarize the analysis in chat.
 
 ## MCP Tools
 
@@ -28,6 +29,7 @@ Initial tools:
 - `sync_git_file_diffs`
 - `add_file_diff`
 - `list_file_diffs`
+- `record_usage`
 - `list_conversation`
 - `list_pending_conversation`
 - `wait_for_conversation_message`
