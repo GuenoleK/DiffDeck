@@ -63,6 +63,12 @@
     color: var(--dd-color-suggestion);
     background: transparent;
   }
+
+  &__button--archived.finding-actions__button--active {
+    border-color: var(--dd-color-border-strong);
+    color: var(--dd-color-text-muted);
+    background: transparent;
+  }
 }
 
 @media (max-width: 640px) {

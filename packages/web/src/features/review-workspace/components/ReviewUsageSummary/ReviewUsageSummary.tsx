@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { ReviewTokenUsage, ReviewUsage, ReviewUsageConfidence } from "@diffdeck/core";
 import "./ReviewUsageSummary.scss";
 
@@ -56,17 +57,36 @@ function getConfidence(usage: ReviewTokenUsage | undefined): ReviewUsageConfiden
   return usage?.confidence ?? "unavailable";
 }
 
-function UsageBadge({ confidence, tooltip }: { confidence: ReviewUsageConfidence; tooltip?: string }) {
+function UsageBadge({
+  confidence,
+  defaultPlacement = "above",
+  tooltip,
+}: {
+  confidence: ReviewUsageConfidence;
+  defaultPlacement?: "above" | "below";
+  tooltip?: string;
+}) {
   const tooltipText = tooltip ?? confidenceTooltips[confidence];
+  const [tooltipPlacement, setTooltipPlacement] = useState<"above" | "below">(defaultPlacement);
+
+  const updatePlacement = (element: HTMLElement) => {
+    const minimumTopSpace = 92;
+    setTooltipPlacement(element.getBoundingClientRect().top < minimumTopSpace ? "below" : "above");
+  };
 
   return (
     <span
       aria-label={`${confidenceLabels[confidence]}: ${tooltipText}`}
-      className={`review-usage-summary__badge review-usage-summary__badge--${confidence}`}
-      data-tooltip={tooltipText}
+      className={`review-usage-summary__badge review-usage-summary__badge--${confidence} review-usage-summary__badge--tooltip-${tooltipPlacement}`}
+      onFocus={(event) => updatePlacement(event.currentTarget)}
+      onMouseEnter={(event) => updatePlacement(event.currentTarget)}
+      onPointerEnter={(event) => updatePlacement(event.currentTarget)}
       tabIndex={0}
     >
       {confidenceLabels[confidence]}
+      <span className="review-usage-summary__tooltip" role="tooltip">
+        {tooltipText}
+      </span>
     </span>
   );
 }
@@ -108,7 +128,7 @@ export function ReviewUsageSummary({ usage }: ReviewUsageSummaryProps) {
     <aside className="review-usage-summary" aria-label="Token usage">
       <header className="review-usage-summary__header">
         <span className="review-usage-summary__eyebrow">Usage</span>
-        <UsageBadge confidence={totalConfidence} tooltip={usage?.total.note} />
+        <UsageBadge confidence={totalConfidence} defaultPlacement="below" tooltip={usage?.total.note} />
       </header>
       <div className="review-usage-summary__total">
         <strong className="review-usage-summary__total-value">{formatTokens(getTokenTotal(usage?.total))}</strong>

@@ -34,6 +34,8 @@ http://127.0.0.1:4337
 
 Au démarrage, le tableau de bord est vide. Les retours apparaissent quand une IA les pousse via MCP ou quand l'API locale est appelée directement.
 
+Dans le deck de revue, les findings peuvent être filtrés par sévérité. Si aucun filtre n'est sélectionné, DiffDeck affiche tous les findings non archivés. Sélectionne une ou plusieurs sévérités pour restreindre l'affichage, et utilise `Archive` sur un finding pour le masquer sans le supprimer du paquet de session.
+
 ## Configurer MCP
 
 DiffDeck fournit un assistant de configuration MCP.

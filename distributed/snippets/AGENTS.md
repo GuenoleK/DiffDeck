@@ -10,7 +10,7 @@
 - For installing, updating, refreshing, or synchronizing DiffDeck distributed skills in this project, use `.agent/skills/diffdeck-sync-distributed`; run a dry-run first and do not overwrite local edits unless explicitly requested.
 - For questions asked from the DiffDeck UI conversation, use `.agent/skills/diffdeck-code-review` and the MCP conversation tools. For one-shot replies, use `list_pending_conversation` then `add_conversation_reply`. For live chat, loop on `wait_for_conversation_message`, answer with the current agent's project context, then send the reply back to DiffDeck with `add_conversation_reply`.
 - Call `record_usage` near the end of the review. Use exact provider counters when the current AI tool exposes them; otherwise mark provider totals `unavailable` so DiffDeck can add observed local estimates. Mark total provider usage and DiffDeck/project/host attribution as `exact`, `estimated`, `observed`, or `unavailable`.
-- If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as fallback.
+- If DiffDeck MCP is unavailable, stop before the review, propose MCP configuration as the main next step, then mention chat-only review only as falla
 - If MCP configuration requires restarting the AI tool, give a clear resume phrase with the source, target branch, and context, for example: "Analyze <SOURCE> with DiffDeck. Target branch: <TARGET>. Feature/fix context: <ticket, acceptance criteria, business description, or useful knowledge>."
 <!-- END DIFFDECK MANAGED BLOCK -->
 

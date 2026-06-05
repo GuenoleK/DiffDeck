@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { ReviewSnapshot } from "@diffdeck/core";
+import { findingSeverities, type FindingSeverity, type ReviewSnapshot } from "@diffdeck/core";
 import {
   addConversationMessage,
   clearConversation,
@@ -19,6 +19,7 @@ import { ReviewContextPanel } from "./components/ReviewContextPanel/ReviewContex
 import { ReviewSharePanel } from "./components/ReviewSharePanel/ReviewSharePanel.js";
 import { ReviewSummary } from "./components/ReviewSummary/ReviewSummary.js";
 import { ReviewUsageSummary } from "./components/ReviewUsageSummary/ReviewUsageSummary.js";
+import { SeverityFilter } from "./components/SeverityFilter/SeverityFilter.js";
 import { SessionHandoffPanel } from "./components/SessionHandoffPanel/SessionHandoffPanel.js";
 import "./ReviewWorkspace.scss";
 
@@ -51,9 +52,21 @@ export function ReviewWorkspace() {
   const [isSessionOpen, setIsSessionOpen] = useState(false);
   const [conversationFindingId, setConversationFindingId] = useState<string | undefined>();
   const [diffContext, setDiffContext] = useState<ReviewDiffContext>({ filePaths: [] });
-  const approvedFindings = snapshot?.findings.filter((finding) => finding.status === "approved") ?? [];
+  const [selectedSeverities, setSelectedSeverities] = useState<FindingSeverity[]>([]);
+  const activeFindings = snapshot?.findings.filter((finding) => finding.status !== "archived") ?? [];
+  const severityCounts = findingSeverities.reduce(
+    (counts, severity) => ({
+      ...counts,
+      [severity]: activeFindings.filter((finding) => finding.severity === severity).length,
+    }),
+    {} as Record<FindingSeverity, number>,
+  );
+  const displayedFindings = selectedSeverities.length
+    ? activeFindings.filter((finding) => selectedSeverities.includes(finding.severity))
+    : activeFindings;
+  const approvedFindings = activeFindings.filter((finding) => finding.status === "approved");
   const unresolvedCount =
-    snapshot?.findings.filter((finding) => finding.status === "draft" || finding.status === "approved").length ?? 0;
+    activeFindings.filter((finding) => finding.status === "draft" || finding.status === "approved").length ?? 0;
   const fileDiffs = snapshot?.fileDiffs ?? [];
   const fileDiffCount = fileDiffs.length;
   const hasContext = Boolean(snapshot?.review.contextSummary?.trim());
@@ -62,6 +75,14 @@ export function ReviewWorkspace() {
 
   const refresh = async () => {
     setSnapshot(await getActiveReview());
+  };
+
+  const toggleSeverityFilter = (severity: FindingSeverity) => {
+    setSelectedSeverities((currentSeverities) =>
+      currentSeverities.includes(severity)
+        ? currentSeverities.filter((currentSeverity) => currentSeverity !== severity)
+        : [...currentSeverities, severity],
+    );
   };
 
   useEffect(() => {
@@ -109,7 +130,7 @@ export function ReviewWorkspace() {
                     Reset
                   </button>
                 </div>
-                <ReviewSummary snapshot={snapshot} />
+                <ReviewSummary findings={activeFindings} />
               </div>
             ) : null}
           </div>
@@ -202,6 +223,14 @@ export function ReviewWorkspace() {
               </button>
             </div>
           </div>
+          {snapshot && activeView === "findings" ? (
+            <SeverityFilter
+              counts={severityCounts}
+              onClear={() => setSelectedSeverities([])}
+              onToggle={toggleSeverityFilter}
+              selectedSeverities={selectedSeverities}
+            />
+          ) : null}
 
           <div className="review-workspace__content">
             {activeView === "diffs" && snapshot ? (
@@ -213,8 +242,8 @@ export function ReviewWorkspace() {
                 }}
                 selectedContext={diffContext}
               />
-            ) : snapshot?.findings.length ? (
-              snapshot.findings.map((finding) => (
+            ) : displayedFindings.length ? (
+              displayedFindings.map((finding) => (
                 <FindingCard
                   finding={finding}
                   isConversationTarget={conversationFindingId === finding.id}
@@ -231,9 +260,13 @@ export function ReviewWorkspace() {
               ))
             ) : (
               <div className="review-workspace__empty">
-                <h2 className="review-workspace__empty-title">No findings in the deck</h2>
+                <h2 className="review-workspace__empty-title">
+                  {activeFindings.length ? "No findings match the filters" : "No findings in the deck"}
+                </h2>
                 <p className="review-workspace__empty-text">
-                  Start a review session to collect structured comments, then approve only the ones worth publishing.
+                  {activeFindings.length
+                    ? "Clear one or more severity filters to bring findings back into view."
+                    : "Start a review session to collect structured comments, then approve only the ones worth publishing."}
                 </p>
               </div>
             )}

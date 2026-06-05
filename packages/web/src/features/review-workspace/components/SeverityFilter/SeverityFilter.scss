@@ -1,0 +1,101 @@
+.severity-filter {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -0.25rem 0 0.85rem;
+
+  &__label {
+    color: var(--dd-color-text-muted);
+    font-family: var(--dd-font-mono);
+    font-size: 0.72rem;
+    font-weight: 620;
+    text-transform: uppercase;
+  }
+
+  &__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.28rem;
+  }
+
+  &__button,
+  &__clear {
+    border: 1px solid rgba(242, 241, 236, 0.12);
+    border-radius: 999px;
+    min-height: 1.9rem;
+    color: var(--dd-color-text-muted);
+    background: rgba(0, 0, 0, 0.22);
+    font: inherit;
+    font-size: 0.74rem;
+    cursor: pointer;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.42rem;
+    padding: 0 0.42rem 0 0.62rem;
+
+    strong {
+      display: inline-grid;
+      place-items: center;
+      min-width: 1.25rem;
+      min-height: 1.25rem;
+      border-radius: 999px;
+      color: var(--dd-color-text);
+      background: rgba(242, 241, 236, 0.08);
+      font-family: var(--dd-font-mono);
+      font-size: 0.66rem;
+    }
+
+    &:hover {
+      color: var(--dd-color-text);
+      background: rgba(242, 241, 236, 0.06);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+
+  &__button--critical.severity-filter__button--active {
+    border-color: var(--dd-color-critical);
+    color: var(--dd-color-critical);
+  }
+
+  &__button--important.severity-filter__button--active {
+    border-color: var(--dd-color-important);
+    color: var(--dd-color-important);
+  }
+
+  &__button--suggestion.severity-filter__button--active {
+    border-color: var(--dd-color-suggestion);
+    color: var(--dd-color-suggestion);
+  }
+
+  &__button--question.severity-filter__button--active {
+    border-color: var(--dd-color-question);
+    color: var(--dd-color-question);
+  }
+
+  &__button--praise.severity-filter__button--active {
+    border-color: var(--dd-color-praise);
+    color: var(--dd-color-praise);
+  }
+
+  &__clear {
+    padding: 0 0.6rem;
+
+    &:hover {
+      border-color: var(--dd-color-border-strong);
+      color: var(--dd-color-text);
+    }
+
+    &:focus-visible {
+      outline: 0;
+      box-shadow: var(--dd-focus-ring);
+    }
+  }
+}

@@ -11,6 +11,7 @@ export const findingStatuses = [
   "approved",
   "rejected",
   "resolved",
+  "archived",
   "posted",
 ] as const;
 

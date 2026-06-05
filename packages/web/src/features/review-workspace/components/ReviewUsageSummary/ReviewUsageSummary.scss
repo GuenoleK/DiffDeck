@@ -104,10 +104,17 @@
       box-shadow: var(--dd-focus-ring);
     }
 
-    &::after {
+    &:hover .review-usage-summary__tooltip,
+    &:focus .review-usage-summary__tooltip,
+    &:focus-visible .review-usage-summary__tooltip {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  &__tooltip {
       position: absolute;
       right: 0;
-      bottom: calc(100% + 0.5rem);
       z-index: 5;
       width: min(18rem, 72vw);
       border: 1px solid var(--dd-color-border-strong);
@@ -116,7 +123,6 @@
       color: var(--dd-color-text-soft);
       background: #090a0a;
       box-shadow: var(--dd-shadow-panel);
-      content: attr(data-tooltip);
       font-family: inherit;
       font-size: 0.72rem;
       line-height: 1.35;
@@ -128,14 +134,14 @@
       transition:
         opacity 120ms ease,
         transform 120ms ease;
-    }
+  }
 
-    &:hover::after,
-    &:focus::after,
-    &:focus-visible::after {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  &__badge--tooltip-above &__tooltip {
+    bottom: calc(100% + 0.5rem);
+  }
+
+  &__badge--tooltip-below &__tooltip {
+    top: calc(100% + 0.5rem);
   }
 
   &__badge--exact {

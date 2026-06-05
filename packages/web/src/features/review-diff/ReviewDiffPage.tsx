@@ -138,6 +138,18 @@ function countFilesLabel(count: number): string {
   return `${count} ${count > 1 ? "files" : "file"}`;
 }
 
+function matchesFileSearch(fileDiff: ReviewFileDiff, searchTerm: string): boolean {
+  const normalizedSearch = searchTerm.trim().toLocaleLowerCase();
+
+  if (!normalizedSearch) {
+    return true;
+  }
+
+  return [fileDiff.filePath, fileDiff.oldFilePath]
+    .filter((path): path is string => Boolean(path))
+    .some((path) => path.toLocaleLowerCase().includes(normalizedSearch));
+}
+
 function isSelectedFile(selectedContext: ReviewDiffContext, filePath: string): boolean {
   return selectedContext.filePaths.includes(filePath);
 }
@@ -175,13 +187,19 @@ function DiffLineButton({
 
 export function ReviewDiffPage({ fileDiffs, onContextChange, selectedContext }: ReviewDiffPageProps) {
   const [displayMode, setDisplayMode] = useState<DiffDisplayMode>("split");
+  const [fileSearch, setFileSearch] = useState("");
   const [activeFilePath, setActiveFilePath] = useState(fileDiffs[0]?.filePath);
-  const activeFile = fileDiffs.find((fileDiff) => fileDiff.filePath === activeFilePath) ?? fileDiffs[0];
-  const activeFileIndex = activeFile ? fileDiffs.findIndex((fileDiff) => fileDiff.id === activeFile.id) : -1;
+  const filteredFileDiffs = useMemo(
+    () => fileDiffs.filter((fileDiff) => matchesFileSearch(fileDiff, fileSearch)),
+    [fileDiffs, fileSearch],
+  );
+  const activeFile = filteredFileDiffs.find((fileDiff) => fileDiff.filePath === activeFilePath) ?? filteredFileDiffs[0];
+  const activeFileIndex = activeFile ? filteredFileDiffs.findIndex((fileDiff) => fileDiff.id === activeFile.id) : -1;
   const canGoToPreviousFile = activeFileIndex > 0;
-  const canGoToNextFile = activeFileIndex >= 0 && activeFileIndex < fileDiffs.length - 1;
+  const canGoToNextFile = activeFileIndex >= 0 && activeFileIndex < filteredFileDiffs.length - 1;
   const rows = useMemo(() => parseUnifiedDiff(activeFile?.unifiedDiff ?? ""), [activeFile?.unifiedDiff]);
   const selectedLine = selectedContext.line;
+  const hasFileSearch = Boolean(fileSearch.trim());
 
   const toggleFileContext = (filePath: string) => {
     const nextFilePaths = isSelectedFile(selectedContext, filePath)
@@ -219,7 +237,7 @@ export function ReviewDiffPage({ fileDiffs, onContextChange, selectedContext }: 
   };
 
   const goToFile = (offset: -1 | 1) => {
-    const nextFile = fileDiffs[activeFileIndex + offset];
+    const nextFile = filteredFileDiffs[activeFileIndex + offset];
 
     if (!nextFile) {
       return;
@@ -243,43 +261,58 @@ export function ReviewDiffPage({ fileDiffs, onContextChange, selectedContext }: 
     <section className="review-diff-page" aria-label="Processed file diffs">
       <aside className="review-diff-page__files" aria-label="Files">
         <div className="review-diff-page__files-header">
-          <span>{countFilesLabel(fileDiffs.length)}</span>
+          <span>
+            {hasFileSearch ? `${filteredFileDiffs.length}/${fileDiffs.length} files` : countFilesLabel(fileDiffs.length)}
+          </span>
           <span>{countFilesLabel(selectedContext.filePaths.length)} in context</span>
         </div>
 
-        <div className="review-diff-page__file-list">
-          {fileDiffs.map((fileDiff) => {
-            const isActive = activeFile?.filePath === fileDiff.filePath;
-            const isInContext = isSelectedFile(selectedContext, fileDiff.filePath);
+        <label className="review-diff-page__file-search">
+          <span className="review-diff-page__file-search-label">Search files</span>
+          <input
+            className="review-diff-page__file-search-input"
+            onChange={(event) => setFileSearch(event.target.value)}
+            placeholder="Filename or path"
+            type="search"
+            value={fileSearch}
+          />
+        </label>
 
-            return (
-              <article
-                className={`review-diff-page__file-item ${isActive ? "review-diff-page__file-item--active" : ""}`}
-                key={fileDiff.id}
-              >
-                <button
-                  className="review-diff-page__file-open"
-                  onClick={() => setActiveFilePath(fileDiff.filePath)}
-                  type="button"
+        <div className="review-diff-page__file-list">
+          {filteredFileDiffs.length ? (
+            filteredFileDiffs.map((fileDiff) => {
+              const isActive = activeFile?.filePath === fileDiff.filePath;
+              const isInContext = isSelectedFile(selectedContext, fileDiff.filePath);
+
+              return (
+                <article
+                  className={`review-diff-page__file-item ${isActive ? "review-diff-page__file-item--active" : ""}`}
+                  key={fileDiff.id}
                 >
-                  <span className="review-diff-page__file-path">{fileDiff.filePath}</span>
-                  <span className="review-diff-page__file-meta">
-                    {formatStatus(fileDiff.status)}
-                    {typeof fileDiff.additions === "number" ? ` +${fileDiff.additions}` : ""}
-                    {typeof fileDiff.deletions === "number" ? ` -${fileDiff.deletions}` : ""}
-                  </span>
-                </button>
-                <label className="review-diff-page__context-toggle">
-                  <input
-                    checked={isInContext}
-                    onChange={() => toggleFileContext(fileDiff.filePath)}
-                    type="checkbox"
-                  />
-                  Context
-                </label>
-              </article>
-            );
-          })}
+                  <button
+                    className="review-diff-page__file-open"
+                    onClick={() => setActiveFilePath(fileDiff.filePath)}
+                    type="button"
+                  >
+                    <span className="review-diff-page__file-path">{fileDiff.filePath}</span>
+                    <span className="review-diff-page__file-meta">
+                      {formatStatus(fileDiff.status)}
+                      {typeof fileDiff.additions === "number" ? ` +${fileDiff.additions}` : ""}
+                      {typeof fileDiff.deletions === "number" ? ` -${fileDiff.deletions}` : ""}
+                    </span>
+                  </button>
+                  <label className="review-diff-page__context-toggle">
+                    <input checked={isInContext} onChange={() => toggleFileContext(fileDiff.filePath)} type="checkbox" />
+                    Context
+                  </label>
+                </article>
+              );
+            })
+          ) : (
+            <div className="review-diff-page__file-list-empty">
+              No file matches <span>{fileSearch.trim()}</span>
+            </div>
+          )}
         </div>
       </aside>
 
@@ -303,7 +336,7 @@ export function ReviewDiffPage({ fileDiffs, onContextChange, selectedContext }: 
                 {"<"}
               </button>
               <span className="review-diff-page__file-position">
-                {activeFileIndex + 1}/{fileDiffs.length}
+                {activeFile ? activeFileIndex + 1 : 0}/{filteredFileDiffs.length}
               </span>
               <button
                 aria-label="Next file"
@@ -343,7 +376,12 @@ export function ReviewDiffPage({ fileDiffs, onContextChange, selectedContext }: 
           </div>
         </header>
 
-        {displayMode === "split" ? (
+        {!activeFile ? (
+          <div className="review-diff-page__no-match">
+            <h3 className="review-diff-page__no-match-title">No matching file</h3>
+            <p className="review-diff-page__no-match-text">Adjust the file search to bring diffs back into view.</p>
+          </div>
+        ) : displayMode === "split" ? (
           <div className="review-diff-page__split" role="table" aria-label={`Side by side diff for ${activeFile?.filePath}`}>
             {rows.map((row) => {
               if (row.kind === "meta") {

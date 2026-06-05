@@ -50,6 +50,13 @@ export function FindingActions({ isConversationTarget = false, onAskAboutFinding
         >
           Resolve
         </Button>
+        <Button
+          aria-pressed={status === "archived"}
+          className={actionClassName("archived")}
+          onClick={() => void onStatusChange("archived")}
+        >
+          Archive
+        </Button>
       </div>
     </footer>
   );

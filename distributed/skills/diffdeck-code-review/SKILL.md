@@ -246,6 +246,16 @@ Each DiffDeck finding should include:
 - `confidence`: `low`, `medium`, or `high`.
 - `agentName`: the current AI tool name when known.
 
+Use the full severity range when it helps the human reviewer prioritize:
+
+- `critical`: blocking bug, security issue, data loss, or major regression.
+- `important`: major maintainability, correctness, or architecture concern.
+- `suggestion`: optional refactoring, readability, simplification, or small quality improvement.
+- `question`: missing business, product, or technical context that should be clarified before approving.
+- `praise`: genuinely useful positive feedback on robust code, a good test, or an elegant solution.
+
+Do not collapse every useful comment into `important` or `critical`. If a finding is not a blocking risk, prefer `suggestion` or `question` when that more accurately describes the review value.
+
 ## Review Scope Rules
 
 For pull request, merge request, branch, or diff reviews, keep findings strictly scoped to the reviewed diff:

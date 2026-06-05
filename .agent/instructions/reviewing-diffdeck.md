@@ -49,6 +49,8 @@ Each finding should include:
 - why the issue matters for DiffDeck;
 - a final review comment suitable for the human to edit in the UI.
 
+Use the whole severity vocabulary. Reserve `critical` and `important` for blocking or substantial risks, use `suggestion` for optional improvements, `question` for context gaps, and `praise` for genuinely useful positive feedback. Do not promote every nontrivial comment to `important`.
+
 Use precise references such as:
 
 ```text

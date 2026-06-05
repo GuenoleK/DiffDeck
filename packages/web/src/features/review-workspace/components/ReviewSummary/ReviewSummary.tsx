@@ -1,21 +1,21 @@
-import type { ReviewSnapshot } from "@diffdeck/core";
+import type { Finding } from "@diffdeck/core";
 import "./ReviewSummary.scss";
 
 type ReviewSummaryProps = {
-  snapshot: ReviewSnapshot;
+  findings: Finding[];
 };
 
-export function ReviewSummary({ snapshot }: ReviewSummaryProps) {
-  const approvedCount = snapshot.findings.filter((finding) => finding.status === "approved").length;
-  const draftCount = snapshot.findings.filter((finding) => finding.status === "draft").length;
-  const highSignalCount = snapshot.findings.filter(
+export function ReviewSummary({ findings }: ReviewSummaryProps) {
+  const approvedCount = findings.filter((finding) => finding.status === "approved").length;
+  const draftCount = findings.filter((finding) => finding.status === "draft").length;
+  const highSignalCount = findings.filter(
     (finding) => finding.severity === "critical" || finding.severity === "important",
   ).length;
 
   return (
     <aside className="review-summary" aria-label="Review summary">
       <span className="review-summary__item">
-        <strong className="review-summary__value">{snapshot.findings.length}</strong>
+        <strong className="review-summary__value">{findings.length}</strong>
         <span className="review-summary__label">Findings</span>
       </span>
       <span className="review-summary__item">

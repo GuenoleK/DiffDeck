@@ -96,6 +96,8 @@ Invoke-RestMethod `
 
 Refresh the UI or wait a few seconds; the card should appear.
 
+Findings can be filtered by severity in the review deck. With no severity selected, DiffDeck shows every non-archived finding. Select one or more severities to narrow the deck, and use `Archive` on a finding to hide it from the main review without deleting it from the session data.
+
 ## Configure MCP
 
 DiffDeck includes a setup assistant for MCP.
@@ -491,7 +493,7 @@ node .agent/skills/diffdeck-sync-distributed/scripts/sync-diffdeck-distributed.m
 3. Ask the AI to prepare a DiffDeck review for a MR/PR, branch, diff, or local changes.
 4. The AI reads the target project instructions and analyzes the requested scope against the target branch or baseline.
 5. The AI pushes structured findings to DiffDeck.
-6. The human edits final comments, toggles findings as approved, rejected, or resolved, and uses approved findings as the publication queue.
+6. The human edits final comments, filters by severity, toggles findings as approved, rejected, resolved, or archived, and uses approved findings as the publication queue.
 7. Optionally, ask the AI to prefill approved comments in GitLab/GitHub using `diffdeck-browser-prefill`.
 
 ## Stop The App
