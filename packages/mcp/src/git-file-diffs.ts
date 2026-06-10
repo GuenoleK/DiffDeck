@@ -11,11 +11,14 @@ type GitFileStatus = ReviewFileDiffDraftInput["status"];
 export type SyncGitFileDiffsInput = {
   repositoryPath: string;
   baseRef: string;
+  compareMode?: "direct" | "merge-base";
   agentName?: string;
 };
 
 export type SyncGitFileDiffsResult = {
   baseRef: string;
+  compareMode: "direct" | "merge-base";
+  effectiveBaseRef: string;
   repositoryPath: string;
   fileCount: number;
   files: Array<{
@@ -114,16 +117,26 @@ function languageFromPath(filePath: string): string | undefined {
   return extension || undefined;
 }
 
+async function resolveEffectiveBaseRef(input: SyncGitFileDiffsInput): Promise<string> {
+  if (input.compareMode !== "merge-base") {
+    return input.baseRef;
+  }
+
+  return (await git(input.repositoryPath, ["merge-base", input.baseRef, "HEAD"])).trim();
+}
+
 export async function syncGitFileDiffs(
   client: DiffDeckClient,
   input: SyncGitFileDiffsInput,
 ): Promise<SyncGitFileDiffsResult> {
-  const statusEntries = parseNameStatus(await git(input.repositoryPath, ["diff", "--name-status", input.baseRef]));
-  const numstatEntries = parseNumstat(await git(input.repositoryPath, ["diff", "--numstat", input.baseRef]));
+  const compareMode = input.compareMode ?? "direct";
+  const effectiveBaseRef = await resolveEffectiveBaseRef(input);
+  const statusEntries = parseNameStatus(await git(input.repositoryPath, ["diff", "--name-status", effectiveBaseRef]));
+  const numstatEntries = parseNumstat(await git(input.repositoryPath, ["diff", "--numstat", effectiveBaseRef]));
   const fileDiffDrafts: ReviewFileDiffDraftInput[] = [];
 
   for (const entry of statusEntries) {
-    const unifiedDiff = await git(input.repositoryPath, ["diff", input.baseRef, "--", entry.filePath]);
+    const unifiedDiff = await git(input.repositoryPath, ["diff", effectiveBaseRef, "--", entry.filePath]);
 
     if (!unifiedDiff.trim()) {
       continue;
@@ -152,6 +165,8 @@ export async function syncGitFileDiffs(
 
   return {
     baseRef: input.baseRef,
+    compareMode,
+    effectiveBaseRef,
     repositoryPath: input.repositoryPath,
     fileCount: syncedFiles.length,
     files: syncedFiles,

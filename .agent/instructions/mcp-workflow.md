@@ -41,7 +41,7 @@ Future tools:
 - `export_review`
 - `prepare_browser_publication`
 
-For local Git branch or working-tree reviews, agents should call `sync_git_file_diffs` with the target/base ref after creating the review and before marking it ready. `sync_git_file_diffs` replaces the active review's current Git file-diff set so files removed from the latest Git diff disappear from the UI. Use `add_file_diff` directly only when the agent already has unified diff content from another source such as a PR/MR API.
+For local Git branch or working-tree reviews, agents should call `sync_git_file_diffs` with the target/base ref after creating the review and before marking it ready. For branch-to-branch or MR-style reviews, pass `compareMode: "merge-base"` so the UI shows only source-branch changes since divergence from the target branch. Use direct comparison only for explicit two-dot or exact-baseline requests. `sync_git_file_diffs` replaces the active review's current Git file-diff set so files removed from the latest Git diff disappear from the UI. Use `add_file_diff` directly only when the agent already has unified diff content from another source such as a PR/MR API.
 
 ## Browser Publication
 
@@ -65,5 +65,9 @@ Supported browser publication modes are limited to:
 If the user asks for prefill without specifying a mode, ask them to choose A/B/C before opening or controlling a browser.
 For mode A with Chrome DevTools MCP, guide the user to use Chrome 144+, open `chrome://inspect/#remote-debugging`, enable remote debugging, accept the DevTools MCP access prompt, then retry with `--autoConnect`.
 For GitLab, ask for the action level when it is not explicit: 1 = fill only the opened inline form, 2 = create draft review comments without publishing, 3 = publish/submit after explicit confirmation. For multiple comments, recommend level 2 because unsaved inline textareas can disappear across file navigation, scrolling, lazy loading, or collapsed/unloaded files. In level 2, use `Start a review` for the first comment and `Add to review` for subsequent comments, but never `Add comment now`, `Submit review`, `Publish`, or `Merge` unless level 3 was explicitly requested.
+
+On GitLab, if target files or lines are collapsed, hidden, or lazy-loaded, use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments.
+
+For Chrome DevTools MCP true-session publication, avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls in the default GitLab prefill path. Prefer snapshots, locator/accessibility clicks, keyboard input, and text filling. If a DevTools transport closes after an injection-style call, reconnect at most once, then continue only with non-injection actions or stop and explain that the true-session browser connection is unstable.
 
 After browser publication or prefill work, the agent must disconnect, detach, close, or stop the browser-control session when the browser tool supports it. If the tool cannot release the connection programmatically, the agent must say so and give mode-specific manual steps, such as stopping the DevTools MCP server, disabling remote debugging in `chrome://inspect/#remote-debugging`, closing a dedicated Chrome instance launched with `--remote-debugging-port`, disconnecting the browser extension session, or closing the integrated browser session. Do not close the user's normal browser window unless they explicitly asked for it, and do not leave an active browser-control session silently.

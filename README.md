@@ -330,6 +330,10 @@ For GitLab, the agent should ask for the action level when it is not explicit:
 
 For multiple GitLab comments, level 2 is recommended because unsaved inline textareas can disappear across file navigation, scrolling, lazy loading, or collapsed files. In level 2, use `Start a review` for the first comment and `Add to review` for subsequent comments, but never `Add comment now`, `Submit review`, `Publish`, or `Merge` unless level 3 was explicitly requested.
 
+If GitLab files or lines are collapsed or lazy-loaded, agents should use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments.
+
+For Chrome DevTools MCP in true session mode, agents should avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls during GitLab prefill. Prefer snapshots, locator/accessibility clicks, keyboard input, and text filling. If the DevTools transport closes after an injection-style call, reconnect at most once, then continue only with non-injection actions or stop and report the unstable browser connection.
+
 ## Packages
 
 - `@diffdeck/core`: shared review types and validation schemas.

@@ -236,3 +236,7 @@ DiffDeck conserve seulement trois modes :
 Pour le mode A avec Chrome DevTools MCP, utiliser Chrome 144 ou plus récent, ouvrir `chrome://inspect/#remote-debugging`, activer le remote debugging, accepter la demande d'accès DevTools MCP, puis réessayer avec `--autoConnect`.
 
 Pour GitLab, le mode recommandé pour plusieurs commentaires est le brouillon de review : remplir le textarea, cliquer `Start a review` pour le premier commentaire, puis `Add to review` pour les suivants. Il ne faut pas cliquer `Add comment now`, `Submit review`, `Publish` ou `Merge` sans demande explicite.
+
+Si des fichiers ou lignes GitLab sont repliés ou chargés paresseusement, l'agent doit utiliser les contrôles visibles comme `Expand all files`, `Show file` ou les boutons d'ouverture équivalents avant de poser des commentaires inline.
+
+Avec Chrome DevTools MCP en mode navigateur réel, l'agent doit éviter l'injection JavaScript, les scripts de mutation DOM et les appels génériques `evaluate_script` pendant le préremplissage GitLab. Préférer les snapshots, les clics locator/accessibilité, la saisie clavier et le remplissage de texte. Si le transport DevTools se ferme après un appel de type injection, reconnecter au plus une fois, puis continuer uniquement avec des actions sans injection ou signaler une connexion navigateur instable.

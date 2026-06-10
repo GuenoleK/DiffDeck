@@ -199,9 +199,10 @@ server.tool(
 
 server.tool(
   "sync_git_file_diffs",
-  "Populate the active DiffDeck review with unified diffs from a local Git repository. Use this during branch or local diff analysis so the UI diff page is filled automatically.",
+  "Populate the active DiffDeck review with unified diffs from a local Git repository. Use compareMode=merge-base for branch/MR reviews so the UI shows only the source branch changes since divergence from the target.",
   {
     baseRef: z.string().min(1),
+    compareMode: z.enum(["direct", "merge-base"]).optional(),
     repositoryPath: z.string().optional(),
     agentName: z.string().optional(),
   },
@@ -216,6 +217,7 @@ server.tool(
     const result = await syncGitFileDiffs(client, {
       repositoryPath,
       baseRef: input.baseRef,
+      compareMode: input.compareMode,
       agentName: input.agentName,
     });
 

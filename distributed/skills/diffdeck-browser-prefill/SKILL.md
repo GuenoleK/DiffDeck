@@ -68,6 +68,28 @@ If the user chooses level 1, treat it as a fragile single-form operation: fill t
 
 For GitLab, placing multiple approved comments requires saving each inline comment as a GitLab review draft. Do not rely on unsaved inline textareas across file navigation or scrolling. GitLab diffs can be lazy-loaded or virtualized, so unsaved forms can disappear when files are collapsed, unloaded, or replaced.
 
+## Fast Path
+
+Move quickly once the mode and GitLab action level are known:
+
+1. Retrieve approved findings once with `list_approved_findings`.
+2. Verify the controlled page is authenticated once before placing comments.
+3. On GitLab, if files are collapsed, hidden behind lazy loading, or an `Expand all files` / `Show file` / equivalent control is visible and needed to reach target lines, click it before searching line by line.
+4. For each finding, navigate directly to its file and line, open the inline form, paste the comment, and immediately save it according to the chosen action level.
+5. Do not pause between opening a textarea and filling it. Unsaved GitLab forms are fragile.
+6. Do not re-check global safety rules before every click; instead, verify the visible button label immediately before clicking it.
+7. Report only meaningful blockers, such as missing browser control, unauthenticated page, missing file, missing line, or unavailable safe draft button.
+
+For GitLab level 2, the expected button sequence is deterministic: click `Start a review` for the first saved draft, then `Add to review` for each subsequent draft. Never click `Add comment now`.
+
+## Chrome DevTools Stability
+
+When controlling the user's real Chrome/Edge session through Chrome DevTools MCP, prefer platform-native browser actions: page selection, snapshots, locator/accessibility clicks, keyboard input, and text filling.
+
+Avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script`/console execution for GitLab prefill. In real default-browser sessions, these calls can close the DevTools transport (`Transport closed`) and detach the authenticated browser connection. If a DevTools transport closes after such a call, do not keep retrying the same technique. Reconnect at most once, then continue only with non-injection actions or stop and explain that a stable true-session browser connection is missing.
+
+Use injected JavaScript only as a last resort after telling the user why it is needed and when losing the browser-control connection would be acceptable. It should not be part of the default GitLab prefill path.
+
 ## Workflow
 
 1. Use `list_approved_findings` to retrieve only comments approved by the human.
@@ -76,12 +98,13 @@ For GitLab, placing multiple approved comments requires saving each inline comme
 4. For GitLab, confirm the chosen action level. If it is missing, ask for form-only prefill, draft review comments, or publish/submit.
 5. Open and control the provided GitLab, GitHub, Bitbucket, or review platform URL. If the user asks to use their existing authenticated session, use browser automation attached to the OS default browser rather than an integrated or isolated browser.
 6. Before placing comments, verify that the browser tool can see an authenticated review page, not only a sign-in page or an isolated browser page.
-7. Navigate to the changed file and target line for each finding.
-8. Place the comment according to the chosen action level.
-9. Stop before publishing unless the user explicitly asks to submit.
-10. Release the browser connection when the browser automation tool provides a close, disconnect, detach, or stop-session action. Do not close the user's normal browser window unless they explicitly asked for it.
-11. If the connection cannot be released from the agent side, tell the user exactly how to disconnect it for the mode being used.
-12. Report which comments were placed, which could not be placed, and whether the browser connection was disconnected or still needs user action.
+7. Expand GitLab diff files when needed to make approved target files and lines commentable. Use visible controls such as `Expand all files`, `Show file`, or equivalent per-file expand buttons when they are present and relevant.
+8. Navigate directly to the changed file and target line for each finding.
+9. Place and immediately persist the comment according to the chosen action level.
+10. Stop before publishing unless the user explicitly asks to submit.
+11. Release the browser connection when the browser automation tool provides a close, disconnect, detach, or stop-session action. Do not close the user's normal browser window unless they explicitly asked for it.
+12. If the connection cannot be released from the agent side, tell the user exactly how to disconnect it for the mode being used.
+13. Report which comments were placed, which could not be placed, and whether the browser connection was disconnected or still needs user action.
 
 ## Browser Disconnection
 

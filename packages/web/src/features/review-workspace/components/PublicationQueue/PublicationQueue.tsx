@@ -28,9 +28,12 @@ export function PublicationQueue({ approvedFindings, onShare, review }: Publicat
       "Supported modes are: true session mode with my default browser, fallback mode with the integrated browser, or manual mode with comments ready to paste.",
       "Before acting in GitLab, ask me which action level I want: 1) form-only prefill, 2) draft review comments, or 3) publish/submit.",
       "For multiple comments, recommend level 2 because unsaved GitLab inline textareas can disappear across file navigation, scrolling, lazy loading, or collapsed/unloaded files.",
+      "Once the browser mode and GitLab action level are known, use a fast path: retrieve approved findings once, verify authentication once, navigate directly to each file/line, fill the textarea immediately, then save the draft before moving on.",
+      "On GitLab, if the target files or lines are collapsed or lazy-loaded, click Expand all files, Show file, or the equivalent visible expand control before trying to place inline comments.",
       "For GitLab level 2, fill the textarea, click Start a review for the first comment, then Add to review for subsequent comments. Do not click Add comment now, Submit review, Publish, Merge, or any final publication action.",
       "If I choose level 1, opening the inline comment form and filling its textarea is sufficient; do not click Start a review or Add comment now.",
       "Never publish or submit anything unless I explicitly confirm level 3.",
+      "With Chrome DevTools MCP in my real browser, avoid JavaScript injection, DOM mutation scripts, and generic evaluate_script for GitLab prefill. Prefer snapshots, locator/accessibility clicks, keyboard input, and text filling. If a DevTools transport closes after an injection-style call, reconnect at most once and continue only with non-injection actions, or stop and explain the missing stable browser connection.",
       "When the browser work is finished, disconnect or detach the browser automation session if your tool supports it. Do not close my normal browser window unless I explicitly ask.",
       "If you cannot disconnect the browser connection from your side, tell me exactly how to do it for the current mode, for example stopping DevTools MCP, disabling remote debugging in chrome://inspect/#remote-debugging, closing a dedicated debugging browser, disconnecting the extension session, or closing the integrated browser session.",
     ].join("\n");

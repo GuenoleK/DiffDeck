@@ -157,7 +157,7 @@ I can run the Codex setup from the DiffDeck repository if you confirm its locati
 8. Do not run builds, compilation, or tests automatically during the review. Propose relevant verification commands in the final summary. Run them only when the user explicitly asks, or when a compilation/runtime doubt is central to confirming a finding; in that case, say what you are going to run and why before running it.
 9. Create or reuse a DiffDeck review.
 10. If ticket information, acceptance criteria, business rules, or functional context were provided, call `set_review_context` with a concise summary for the UI side panel.
-11. For local Git reviews, call `sync_git_file_diffs` with the target/base ref so the UI file-diff page is filled automatically. If `sync_git_file_diffs` is unavailable but unified diff content is available, call `add_file_diff` once per processed file.
+11. For local Git branch or MR reviews, call `sync_git_file_diffs` with the target/base ref and `compareMode: "merge-base"` so the UI file-diff page shows only the source branch changes since divergence. Use direct comparison only for explicit two-dot or working-tree baseline requests. If `sync_git_file_diffs` is unavailable but unified diff content is available, call `add_file_diff` once per processed file.
 12. Push one structured finding per actionable review comment.
 13. Call `record_usage` near the end of the review. Use exact provider totals when the current AI tool exposes them; otherwise mark provider totals `unavailable` so DiffDeck can add observed local estimates. Mark DiffDeck, project, and other/host attribution as `exact`, `estimated`, `observed`, or `unavailable`.
 14. Mark the review ready for human review.
@@ -270,6 +270,10 @@ For pull request, merge request, branch, or diff reviews, keep findings strictly
 ## File Diff Rules
 
 For local Git reviews, prefer `sync_git_file_diffs` with the target/base ref. This is mandatory when available for requests like "review the current branch against main" or "analyze local changes against dev", because findings and file diffs should appear together in DiffDeck. Each call replaces the active review's current Git file-diff set, so files removed from the latest Git diff disappear from the UI.
+
+For branch-to-branch and MR/PR-style reviews, use merge-base comparison. If the MCP tool exposes `compareMode`, pass `compareMode: "merge-base"` instead of manually diffing against the target branch tip. This avoids mixing changes that landed on the target branch after divergence into the reviewed branch. If `compareMode` is unavailable, compute `git merge-base <TARGET> HEAD` yourself and pass that SHA as `baseRef`.
+
+Use direct comparison only when the user explicitly asks for a two-dot diff or a specific baseline ref. If a sync returns many more files than the platform MR/PR or the agent's own `git diff <TARGET>...HEAD` check, stop and correct the base before reading those extra files.
 
 When the review source is not a local Git repository but the agent has reliable unified diff content for reviewed files, call `add_file_diff` for each processed file.
 
