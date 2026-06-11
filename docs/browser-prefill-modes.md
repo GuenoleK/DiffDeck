@@ -4,11 +4,13 @@ DiffDeck does not publish review comments by itself. It prepares a queue of huma
 
 The default recommendation is Playwright MCP with the Playwright Chrome Extension. It lets the user expose a selected Chrome, Edge, or Chromium tab that is already authenticated, without launching Chrome with a remote debugging port.
 
+For GitLab, the reliable workflow is: use Playwright Extension for session and authentication, then create positioned notes through the GitLab API from that authenticated browser context. Inline diff clicking is a fallback and visual verification tool, not the primary GitLab comment creation path.
+
 ## Decision Matrix
 
 | Priority | Mode | Use When | Advantages | Limits |
 |---:|---|---|---|---|
-| 1 | Playwright MCP + Chrome Extension | The user wants the agent to control an already authenticated real browser tab. | Reuses the user's real session, the user selects the exposed tab, no remote debugging port is needed. | Requires the extension and an MCP server configured with `--extension`. |
+| 1 | Playwright MCP + Chrome Extension | The user wants the agent to use an already authenticated real browser tab. | Reuses the user's real session, the user selects the exposed tab, no remote debugging port is needed. For GitLab, supports API calls from the authenticated page context. | Requires the extension and an MCP server configured with `--extension`. |
 | 2 | Playwright MCP with persistent profile | The extension cannot be installed, but a dedicated browser profile is acceptable. | Simple MCP setup, login state is kept between sessions. | The user must authenticate once in the Playwright browser; it is not the normal browser profile. |
 | 3 | Playwright MCP via CDP / remote debugging | A controlled enterprise or advanced setup needs real Chrome automation without the extension. | Keeps Playwright's robust locators, hover, scroll, and click behavior against a real browser. | More technical; exposes a remote debugging endpoint and needs clear security handling. |
 | 4 | Chrome DevTools MCP | The agent needs browser diagnostics, network/console/perf inspection, auth checks, or a limited fallback. | Official Google tool, good diagnostics, can attach through auto-connect or browser URL. | Less reliable as the main GitLab inline-comment engine on large virtualized diffs. |
@@ -35,6 +37,8 @@ Install the Playwright Chrome Extension, then configure the MCP server with `--e
 When the agent first interacts with the browser, the extension asks the user which tab should be exposed. This is the preferred DiffDeck path for "use my real authenticated browser" because it preserves the user session while keeping tab selection explicit.
 
 The extension can also use `PLAYWRIGHT_MCP_EXTENSION_TOKEN` to avoid repeated connection approval prompts. Treat that token like a local credential for the browser profile: do not commit it and do not paste it in shared docs or tickets.
+
+For GitLab, use the selected authenticated tab to run same-origin API requests. Do not extract cookies, CSRF tokens, or session material into chat, logs, or generated docs.
 
 ### Client Setup Notes
 
@@ -122,6 +126,7 @@ Known limits for GitLab inline comments:
 - large diffs can produce huge accessible snapshots;
 - virtualized or lazy-loaded files can recycle line nodes;
 - inline comment buttons may appear only after a real hover;
+- existing discussion reply textareas can remain visible and can be mistaken for a new inline comment form;
 - a click can miss if GitLab unloads or re-renders the target line.
 
 When using Chrome DevTools MCP for GitLab prefill, avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls. Prefer snapshots, locator or accessibility clicks, keyboard input, text filling, hover, and scroll.
@@ -143,6 +148,47 @@ When no safe browser-control mode is available, use `list_approved_findings` and
 
 Do not convert an inline finding into a general MR/PR note unless the user approves that fallback for the specific finding.
 
+## GitLab API-First Workflow
+
+For GitLab, use API creation when the user chose level 2 or level 3:
+
+- level 2: create draft notes with `POST /api/v4/projects/:project_id/merge_requests/:iid/draft_notes`;
+- level 3: create published discussions with `POST /api/v4/projects/:project_id/merge_requests/:iid/discussions`, or publish drafts, only after explicit confirmation.
+
+Before creating a positioned note:
+
+1. Confirm the authenticated page is the expected merge request.
+2. Resolve the project ID or URL-encoded project path and merge request IID.
+3. Fetch the latest MR version:
+
+```text
+GET /api/v4/projects/:project_id/merge_requests/:iid/versions
+```
+
+4. Use the first version response for the position SHAs:
+   - `base_sha` = `base_commit_sha`;
+   - `start_sha` = `start_commit_sha`;
+   - `head_sha` = `head_commit_sha`.
+5. Create a `position` with:
+   - `position_type: "text"`;
+   - `old_path`;
+   - `new_path`;
+   - `new_line` for a new-side line;
+   - `old_line` for an old-side deletion.
+6. Verify the created draft note or discussion through the API before moving to the next finding.
+
+Do not publish through a generic visible textarea. Do not use a `Reply to comment` textarea unless the user explicitly asked to reply to that existing thread.
+
+If the API path fails and the user accepts UI fallback, the agent must confirm that the opened textarea belongs to the target diff row, target file, and target line before filling or saving it.
+
+Recovery for a misplaced GitLab note:
+
+1. Find the note by body and author in draft notes or discussions.
+2. Verify whether its position matches the expected file and line.
+3. Delete the misplaced note when permissions and API allow it.
+4. Recreate it with the correct explicit `position`.
+5. Report the correction.
+
 ## Required Agent Workflow
 
 For every browser prefill run:
@@ -155,12 +201,12 @@ For every browser prefill run:
    - level 1: fill opened inline forms only;
    - level 2: create draft review comments without publishing;
    - level 3: publish or submit only after explicit confirmation.
-6. Navigate directly to each file and line.
-7. Expand or show the file if GitLab collapsed or lazy-loaded it.
-8. Hover the target line when required to expose inline controls.
-9. Open the textarea and fill it immediately.
+6. On GitLab, use API-first creation for level 2 and level 3.
+7. Navigate directly to each file and line only for visual verification or strict UI fallback.
+8. Expand or show the file if GitLab collapsed or lazy-loaded it.
+9. In UI fallback, hover the target line when required to expose inline controls.
 10. Save the draft or publish according to the confirmed action level.
-11. Verify that the thread or draft comment exists before moving to the next finding.
+11. Verify that the thread or draft comment exists at the expected file and line before moving to the next finding.
 12. If targeting fails, do not publish elsewhere; report the mismatch or ask for arbitration.
 
 For multiple GitLab comments, recommend level 2. Unsaved inline textareas can disappear during navigation, scrolling, lazy loading, or file collapse.
@@ -172,10 +218,18 @@ For multiple GitLab comments, recommend level 2. Unsaved inline textareas can di
 - Treat `PLAYWRIGHT_MCP_EXTENSION_TOKEN` as sensitive local configuration.
 - Prefer the extension mode over remote debugging for everyday use.
 - If using remote debugging, bind to localhost, use a dedicated profile, and close the debug browser when done.
-- Disconnect, detach, or stop browser automation after the run. Do not leave a browser-control session attached silently.
+- Disconnect, detach, release, or stop browser automation after the run. Do not leave a browser-control session attached silently.
+- If the automation tool has a release, detach, disconnect, or end-session command, use it.
+- If the agent opened a dedicated tab and the selected mode allows it, closing that dedicated tab is acceptable.
+- Do not close a user-selected preexisting browser tab automatically.
+- For Playwright MCP + Chrome Extension, if no programmatic detach command is available, tell the user to click `Annuler` in the Playwright Extension. Explain that this releases the extension session and prevents the next run from inheriting an unexpected browser state.
+
+Desired MCP improvement: Playwright Extension MCP should expose a command such as `detach_current_tab`, `release_current_tab`, or `end_session` that disconnects the agent from the selected tab without closing the browser tab.
 
 ## References
 
 - Playwright MCP: https://github.com/microsoft/playwright-mcp
 - Playwright Chrome Extension: https://github.com/microsoft/playwright/tree/main/packages/extension
 - Chrome DevTools MCP: https://github.com/ChromeDevTools/chrome-devtools-mcp
+- GitLab Discussions API: https://docs.gitlab.com/api/discussions/
+- GitLab Draft Notes API: https://docs.gitlab.com/api/draft_notes/

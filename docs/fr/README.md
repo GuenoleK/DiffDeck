@@ -227,7 +227,9 @@ Quand GitLab ou GitHub n'est pas disponible, le panneau `Share report` permet :
 
 ## Préremplissage navigateur
 
-DiffDeck recommande maintenant Playwright MCP avec la Playwright Chrome Extension comme mode par défaut. Ce mode permet à l'agent de piloter un onglet Chrome/Edge/Chromium choisi par l'utilisateur, avec la session GitLab/GitHub déjà authentifiée, sans lancer Chrome avec un port de debug.
+DiffDeck recommande maintenant Playwright MCP avec la Playwright Chrome Extension comme mode par défaut. Ce mode permet à l'agent d'utiliser un onglet Chrome/Edge/Chromium choisi par l'utilisateur, avec la session GitLab/GitHub déjà authentifiée, sans lancer Chrome avec un port de debug.
+
+Pour GitLab, le workflow fiable est : Playwright Extension pour la session authentifiée, puis API GitLab pour créer des notes positionnées. Les clics inline dans le diff GitLab restent un fallback ou un mode de vérification visuelle, pas le moteur principal.
 
 Priorité recommandée :
 
@@ -253,8 +255,12 @@ Configuration recommandée pour Playwright extension :
 
 Le détail des modes, prérequis et limites est documenté dans [`docs/browser-prefill-modes.md`](../browser-prefill-modes.md).
 
-Pour GitLab, le mode recommandé pour plusieurs commentaires est le brouillon de review : remplir le textarea, cliquer `Start a review` pour le premier commentaire, puis `Add to review` pour les suivants. Il ne faut pas cliquer `Add comment now`, `Submit review`, `Publish` ou `Merge` sans demande explicite.
+Pour GitLab, le mode recommandé pour plusieurs commentaires est le niveau 2 : créer des brouillons sans publication, de préférence via l'API `draft_notes`. Le niveau 3, qui publie vraiment, doit utiliser l'API `discussions` ou publier les brouillons seulement après confirmation explicite.
 
-Si des fichiers ou lignes GitLab sont repliés ou chargés paresseusement, l'agent doit utiliser les contrôles visibles comme `Expand all files`, `Show file` ou les boutons d'ouverture équivalents avant de poser des commentaires inline.
+L'agent doit récupérer la dernière version de MR, construire une `position` explicite avec `base_sha`, `start_sha`, `head_sha`, `position_type: "text"`, `old_path`, `new_path` et la ligne cible, puis vérifier via l'API que la note existe au bon fichier et à la bonne ligne.
+
+Si des fichiers ou lignes GitLab sont repliés ou chargés paresseusement et que l'agent doit utiliser le fallback UI, il doit utiliser les contrôles visibles comme `Expand all files`, `Show file` ou les boutons d'ouverture équivalents avant de poser des commentaires inline. Il ne doit jamais remplir un textarea générique ou le dernier textarea visible, et ne doit jamais utiliser un champ `Reply to comment` sauf demande explicite de réponse à un thread existant.
 
 Avec Chrome DevTools MCP, l'agent doit le traiter comme un outil de diagnostic ou fallback limité plutôt que comme le moteur principal de publication GitLab. Sur de gros diffs virtualisés, les snapshots peuvent devenir volumineux, les lignes peuvent être recyclées, et certains boutons inline n'apparaissent qu'après hover. L'agent doit éviter l'injection JavaScript, les scripts de mutation DOM et les appels génériques `evaluate_script` pendant le préremplissage GitLab.
+
+À la fin d'un préremplissage navigateur, l'agent doit libérer la session d'automatisation. Pour Playwright Extension, si aucune commande MCP de détachement n'est disponible, il doit demander à l'utilisateur de cliquer `Annuler` dans l'extension plutôt que fermer un onglet utilisateur préexistant. Cela évite qu'un prochain run récupère un état navigateur inattendu.

@@ -313,7 +313,9 @@ DiffDeck can:
 
 ## Browser Prefill Modes
 
-After a human approves findings in DiffDeck, an agent can use the approved queue to prefill review comments in a browser. DiffDeck's recommended mode is Playwright MCP with the Playwright Chrome Extension because it can control a user-selected Chrome/Edge/Chromium tab that is already authenticated.
+After a human approves findings in DiffDeck, an agent can use the approved queue to prefill review comments in a browser. DiffDeck's recommended mode is Playwright MCP with the Playwright Chrome Extension because it can use a user-selected Chrome/Edge/Chromium tab that is already authenticated.
+
+For GitLab, the reliable path is Playwright Extension for authenticated session access plus GitLab API calls for positioned notes. Inline UI clicking in the GitLab diff is only a fallback or visual verification path.
 
 Recommended priority:
 
@@ -342,14 +344,16 @@ See [`docs/browser-prefill-modes.md`](docs/browser-prefill-modes.md) for install
 For GitLab, the agent should ask for the action level when it is not explicit:
 
 - level 1: fill only the opened inline form;
-- level 2: create draft review comments without publishing;
-- level 3: publish or submit after explicit confirmation.
+- level 2: create draft review comments without publishing, preferably through the GitLab Draft Notes API;
+- level 3: publish or submit after explicit confirmation, preferably through the GitLab Discussions API with explicit diff position.
 
-For multiple GitLab comments, level 2 is recommended because unsaved inline textareas can disappear across file navigation, scrolling, lazy loading, or collapsed files. In level 2, use `Start a review` for the first comment and `Add to review` for subsequent comments, but never `Add comment now`, `Submit review`, `Publish`, or `Merge` unless level 3 was explicitly requested.
+For multiple GitLab comments, level 2 is recommended. Agents should fetch the latest MR version, create notes with explicit `base_sha`, `start_sha`, `head_sha`, paths, and line, then verify the created draft or discussion at the expected file and line. Never write into a generic visible textarea or a `Reply to comment` field unless replying to an existing thread was explicitly requested.
 
-If GitLab files or lines are collapsed or lazy-loaded, agents should use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments.
+If GitLab files or lines are collapsed or lazy-loaded and UI fallback is used, agents should use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments. The opened textarea must belong to the target diff row, target file, and target line before any save action.
 
 Chrome DevTools MCP is useful for diagnostics and constrained fallback work, but it is not DiffDeck's primary GitLab inline-comment engine. On large or virtualized GitLab diffs, accessible snapshots can become huge, target lines can be recycled, and inline buttons may appear only after hover. When using Chrome DevTools MCP, agents should avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls during GitLab prefill.
+
+At the end of any browser prefill, agents should release the browser automation session. For Playwright Extension, if no MCP detach command is available, the agent should ask the user to click `Annuler` in the extension rather than closing a preexisting user tab. This prevents a later run from inheriting an unexpected browser state.
 
 ## Packages
 
