@@ -227,16 +227,34 @@ Quand GitLab ou GitHub n'est pas disponible, le panneau `Share report` permet :
 
 ## Préremplissage navigateur
 
-DiffDeck conserve seulement trois modes :
+DiffDeck recommande maintenant Playwright MCP avec la Playwright Chrome Extension comme mode par défaut. Ce mode permet à l'agent de piloter un onglet Chrome/Edge/Chromium choisi par l'utilisateur, avec la session GitLab/GitHub déjà authentifiée, sans lancer Chrome avec un port de debug.
 
-- A : piloter le navigateur Chrome/Edge par défaut déjà connecté via Chrome DevTools MCP ou une extension MCP ;
-- B : utiliser le navigateur intégré de l'outil IA, avec une session séparée ;
-- C : fournir les commentaires approuvés prêts à coller manuellement.
+Priorité recommandée :
 
-Pour le mode A avec Chrome DevTools MCP, utiliser Chrome 144 ou plus récent, ouvrir `chrome://inspect/#remote-debugging`, activer le remote debugging, accepter la demande d'accès DevTools MCP, puis réessayer avec `--autoConnect`.
+1. Playwright MCP + Chrome Extension : mode recommandé pour un vrai onglet navigateur déjà authentifié.
+2. Playwright MCP avec profil persistant : navigateur Playwright dédié, session conservée après une première connexion.
+3. Playwright MCP via CDP / remote debugging : mode avancé pour environnements maîtrisés.
+4. Chrome DevTools MCP : mode diagnostic ou fallback limité, utile pour auth, réseau, console et visibilité de page.
+5. Navigateur intégré ou isolé : session séparée, seulement si l'utilisateur accepte de se reconnecter.
+6. Mode manuel : commentaires approuvés prêts à copier/coller.
+
+Configuration recommandée pour Playwright extension :
+
+```json
+{
+  "mcpServers": {
+    "playwright-extension": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--extension"]
+    }
+  }
+}
+```
+
+Le détail des modes, prérequis et limites est documenté dans [`docs/browser-prefill-modes.md`](../browser-prefill-modes.md).
 
 Pour GitLab, le mode recommandé pour plusieurs commentaires est le brouillon de review : remplir le textarea, cliquer `Start a review` pour le premier commentaire, puis `Add to review` pour les suivants. Il ne faut pas cliquer `Add comment now`, `Submit review`, `Publish` ou `Merge` sans demande explicite.
 
 Si des fichiers ou lignes GitLab sont repliés ou chargés paresseusement, l'agent doit utiliser les contrôles visibles comme `Expand all files`, `Show file` ou les boutons d'ouverture équivalents avant de poser des commentaires inline.
 
-Avec Chrome DevTools MCP en mode navigateur réel, l'agent doit éviter l'injection JavaScript, les scripts de mutation DOM et les appels génériques `evaluate_script` pendant le préremplissage GitLab. Préférer les snapshots, les clics locator/accessibilité, la saisie clavier et le remplissage de texte. Si le transport DevTools se ferme après un appel de type injection, reconnecter au plus une fois, puis continuer uniquement avec des actions sans injection ou signaler une connexion navigateur instable.
+Avec Chrome DevTools MCP, l'agent doit le traiter comme un outil de diagnostic ou fallback limité plutôt que comme le moteur principal de publication GitLab. Sur de gros diffs virtualisés, les snapshots peuvent devenir volumineux, les lignes peuvent être recyclées, et certains boutons inline n'apparaissent qu'après hover. L'agent doit éviter l'injection JavaScript, les scripts de mutation DOM et les appels génériques `evaluate_script` pendant le préremplissage GitLab.

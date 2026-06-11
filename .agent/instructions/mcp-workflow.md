@@ -56,18 +56,23 @@ The UI can add human questions to the session conversation. Questions can be att
 
 DiffDeck does not wake an agent by itself. A running AI tool must be connected to the DiffDeck MCP server and must be asked to check or watch the conversation. For a one-shot answer, use `list_pending_conversation` or `list_conversation`, then answer with `add_conversation_reply`. For an explicit watcher mode, call `wait_for_conversation_message`, answer the returned pending human message with `add_conversation_reply`, then repeat until the user asks to stop. If MCP configuration changed, the AI tool usually needs a restart so it reloads the MCP server.
 
-Supported browser publication modes are limited to:
+Supported browser publication modes are limited to this priority order:
 
-- A - true session mode: pilot the user's default Chrome/Edge browser through Chrome DevTools MCP (`--autoConnect` preferred, `--browser-url` for a manually debuggable browser) or a browser-extension MCP;
-- B - fallback mode: use the AI tool's integrated browser with a separate session, only if the user accepts it;
-- C - manual mode: provide approved comments ready to paste.
+1. Playwright MCP + Chrome Extension: recommended true-session mode for a user-selected Chrome/Edge/Chromium tab with the user's existing session.
+2. Playwright MCP with persistent profile: dedicated Playwright browser that keeps login state between sessions.
+3. Playwright MCP via CDP / remote debugging: advanced true-browser mode for controlled setups.
+4. Chrome DevTools MCP: diagnostic or limited fallback mode, useful for auth, network, console, and page checks.
+5. Integrated or isolated browser: separate session, only if the user accepts it.
+6. Manual mode: provide approved comments ready to paste.
 
-If the user asks for prefill without specifying a mode, ask them to choose A/B/C before opening or controlling a browser.
-For mode A with Chrome DevTools MCP, guide the user to use Chrome 144+, open `chrome://inspect/#remote-debugging`, enable remote debugging, accept the DevTools MCP access prompt, then retry with `--autoConnect`.
+If the user asks for prefill without specifying a mode, ask them to choose a browser mode before opening or controlling a browser. Recommend Playwright MCP + Chrome Extension first. Do not silently fall back to an integrated browser when the user expected their real authenticated browser.
+For Playwright MCP + Chrome Extension, use `@playwright/mcp@latest --extension`; the user chooses the browser tab exposed to the agent. Treat `PLAYWRIGHT_MCP_EXTENSION_TOKEN` as sensitive local configuration if it is used.
+For Playwright MCP with a persistent profile, use standard `@playwright/mcp@latest`; the user may need to authenticate once in that dedicated browser. Use `--user-data-dir` when an explicit profile location is required.
+For Playwright MCP via CDP, use a localhost `--cdp-endpoint` only with a Chrome instance that the user intentionally started for browser automation.
 For GitLab, ask for the action level when it is not explicit: 1 = fill only the opened inline form, 2 = create draft review comments without publishing, 3 = publish/submit after explicit confirmation. For multiple comments, recommend level 2 because unsaved inline textareas can disappear across file navigation, scrolling, lazy loading, or collapsed/unloaded files. In level 2, use `Start a review` for the first comment and `Add to review` for subsequent comments, but never `Add comment now`, `Submit review`, `Publish`, or `Merge` unless level 3 was explicitly requested.
 
 On GitLab, if target files or lines are collapsed, hidden, or lazy-loaded, use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments.
 
-For Chrome DevTools MCP true-session publication, avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls in the default GitLab prefill path. Prefer snapshots, locator/accessibility clicks, keyboard input, and text filling. If a DevTools transport closes after an injection-style call, reconnect at most once, then continue only with non-injection actions or stop and explain that the true-session browser connection is unstable.
+For Chrome DevTools MCP publication, treat the tool as diagnostic or fallback rather than the primary GitLab inline-comment engine. Large GitLab diffs can produce huge snapshots, lazy-loaded files can recycle target lines, and inline controls may require real hover. Avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls in the default GitLab prefill path. Prefer snapshots, locator/accessibility clicks, hover, scroll, keyboard input, and text filling. If a DevTools transport closes after an injection-style call, reconnect at most once, then continue only with non-injection actions or stop and explain that the browser connection is unstable.
 
-After browser publication or prefill work, the agent must disconnect, detach, close, or stop the browser-control session when the browser tool supports it. If the tool cannot release the connection programmatically, the agent must say so and give mode-specific manual steps, such as stopping the DevTools MCP server, disabling remote debugging in `chrome://inspect/#remote-debugging`, closing a dedicated Chrome instance launched with `--remote-debugging-port`, disconnecting the browser extension session, or closing the integrated browser session. Do not close the user's normal browser window unless they explicitly asked for it, and do not leave an active browser-control session silently.
+After browser publication or prefill work, the agent must disconnect, detach, close, or stop the browser-control session when the browser tool supports it. If the tool cannot release the connection programmatically, the agent must say so and give mode-specific manual steps, such as stopping Playwright MCP, disconnecting the Playwright extension session, closing the dedicated Playwright browser, disabling remote debugging, closing a dedicated Chrome instance launched with `--remote-debugging-port`, stopping the DevTools MCP server, or closing the integrated browser session. Do not close the user's normal browser window unless they explicitly asked for it, and do not leave an active browser-control session silently.

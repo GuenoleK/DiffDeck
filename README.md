@@ -12,6 +12,7 @@ The first MVP is intentionally small:
 - copy/paste session handoff for lightweight persistence.
 
 French documentation is available in [`docs/fr/README.md`](docs/fr/README.md).
+Browser prefill modes are detailed in [`docs/browser-prefill-modes.md`](docs/browser-prefill-modes.md).
 
 ## Quick Start
 
@@ -312,15 +313,31 @@ DiffDeck can:
 
 ## Browser Prefill Modes
 
-After a human approves findings in DiffDeck, an agent can use the approved queue to prefill review comments in a browser.
+After a human approves findings in DiffDeck, an agent can use the approved queue to prefill review comments in a browser. DiffDeck's recommended mode is Playwright MCP with the Playwright Chrome Extension because it can control a user-selected Chrome/Edge/Chromium tab that is already authenticated.
 
-Supported modes:
+Recommended priority:
 
-- A - True session mode: pilot the user's default Chrome/Edge browser through Chrome DevTools MCP (`--autoConnect` preferred, `--browser-url` for a manually debuggable browser) or a browser-extension MCP.
-- B - Fallback mode: use the AI tool's integrated browser with a separate session, only if the user accepts it.
-- C - Manual mode: provide approved comments ready to paste.
+1. Playwright MCP + Chrome Extension: default mode for a real authenticated browser tab.
+2. Playwright MCP with persistent profile: dedicated Playwright browser that keeps login state.
+3. Playwright MCP via CDP / remote debugging: advanced real-browser mode with explicit security handling.
+4. Chrome DevTools MCP: diagnostic or limited fallback mode, especially for auth, console, network, and page checks.
+5. Integrated or isolated browser: separate session, only if the user accepts re-authentication.
+6. Manual mode: provide approved comments ready to paste.
 
-For mode A with Chrome DevTools MCP, use Chrome 144 or newer, open `chrome://inspect/#remote-debugging`, enable remote debugging, accept the DevTools MCP access prompt, then retry with `--autoConnect`.
+Recommended Playwright extension MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "playwright-extension": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--extension"]
+    }
+  }
+}
+```
+
+See [`docs/browser-prefill-modes.md`](docs/browser-prefill-modes.md) for installation examples, security notes, and the full decision matrix.
 
 For GitLab, the agent should ask for the action level when it is not explicit:
 
@@ -332,7 +349,7 @@ For multiple GitLab comments, level 2 is recommended because unsaved inline text
 
 If GitLab files or lines are collapsed or lazy-loaded, agents should use visible expand controls such as `Expand all files`, `Show file`, or equivalent per-file buttons before placing inline comments.
 
-For Chrome DevTools MCP in true session mode, agents should avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls during GitLab prefill. Prefer snapshots, locator/accessibility clicks, keyboard input, and text filling. If the DevTools transport closes after an injection-style call, reconnect at most once, then continue only with non-injection actions or stop and report the unstable browser connection.
+Chrome DevTools MCP is useful for diagnostics and constrained fallback work, but it is not DiffDeck's primary GitLab inline-comment engine. On large or virtualized GitLab diffs, accessible snapshots can become huge, target lines can be recycled, and inline buttons may appear only after hover. When using Chrome DevTools MCP, agents should avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script` calls during GitLab prefill.
 
 ## Packages
 

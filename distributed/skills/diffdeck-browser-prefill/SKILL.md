@@ -24,35 +24,47 @@ If browser automation is unavailable, explain the limitation and offer the manua
 
 ## Browser Modes
 
-DiffDeck supports only these browser publication modes:
+DiffDeck supports only these browser publication modes, in this priority order:
 
-1. A - True session mode: pilot the user's default Chrome/Edge browser via a browser automation tool attached to that browser, such as Chrome DevTools MCP with `--autoConnect`, Chrome DevTools MCP with `--browser-url`, or a browser-extension MCP.
-2. B - Fallback mode: use the AI tool's integrated browser, with a separate session, only if the user accepts logging in there.
-3. C - Manual mode: provide the approved comments ready to paste manually.
+1. Playwright MCP + Chrome Extension: recommended mode. Pilot a user-selected Chrome/Edge/Chromium tab with the user's existing authenticated session.
+2. Playwright MCP with persistent profile: use a dedicated Playwright browser that keeps login state between sessions.
+3. Playwright MCP via CDP / remote debugging: advanced true-browser mode for controlled environments.
+4. Chrome DevTools MCP: diagnostic or limited fallback mode for authentication, console, network, performance, and page visibility checks.
+5. Integrated or isolated browser: separate session, only if the user accepts logging in there.
+6. Manual mode: provide the approved comments ready to paste manually.
 
 If the user asks to prefill or publish approved comments without specifying a mode, stop before opening any browser and ask the user to choose:
 
 ```text
-Which mode do you want to use?
-A. Pilot my already authenticated default browser (requires Chrome DevTools MCP or an extension MCP attached to this session)
-B. Use the AI tool's integrated browser (separate session, login may be required again)
-C. Provide approved comments ready to paste manually
+Which browser mode do you want to use?
+1. Playwright MCP + Chrome Extension (recommended, uses my selected authenticated browser tab)
+2. Playwright MCP with persistent profile (dedicated browser, login kept between sessions)
+3. Playwright MCP via CDP / remote debugging (advanced real-browser setup)
+4. Chrome DevTools MCP (diagnostic or limited fallback)
+5. Integrated browser (separate session, login may be required again)
+6. Manual comments ready to paste
 ```
 
-For option A, make the setup user-friendly: tell the user that Chrome 144 or newer is required, ask them to open `chrome://inspect/#remote-debugging`, enable remote debugging, accept the Chrome DevTools MCP access prompt when it appears, and retry mode A.
+If the user asks to use their default browser or existing authenticated session, use mode 1 when available. Opening the URL in the default browser is not enough; the agent must be able to click, type, read the page, and place comments in that browser.
 
-If the user asks to use their default browser or existing authenticated session, use true session mode. Opening the URL in the default browser is not enough; the agent must be able to click, type, read the page, and place comments in that browser.
+Recommended Playwright extension setup:
 
-For Chrome DevTools MCP, prefer `--autoConnect`. Guide the user through the setup when needed:
+```json
+{
+  "mcpServers": {
+    "playwright-extension": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--extension"]
+    }
+  }
+}
+```
 
-1. Use Chrome 144 or newer.
-2. Open `chrome://inspect/#remote-debugging` in Chrome.
-3. Enable remote debugging.
-4. Restart the AI tool if the MCP configuration changed.
-5. When Chrome asks to allow DevTools MCP access, accept it.
-6. Retry the prefill in mode A.
+The Playwright Chrome Extension lets the user choose which existing tab is exposed to the agent. If `PLAYWRIGHT_MCP_EXTENSION_TOKEN` is configured to avoid repeated approval prompts, treat it as sensitive local configuration and never copy it into shared docs, findings, comments, or tickets.
 
-If `--autoConnect` is not available, use `--browser-url=http://127.0.0.1:9222` only with a Chrome instance that the user started with remote debugging enabled.
+For Playwright MCP with a persistent profile, standard `@playwright/mcp@latest` keeps browser state between sessions. The user may need to authenticate once in that dedicated browser. Use `--user-data-dir` only when the user wants an explicit profile location.
+
+For Playwright MCP via CDP, use a localhost `--cdp-endpoint` only with a Chrome instance that the user intentionally started for this task. Explain that remote debugging exposes browser state to local processes that can reach the endpoint.
 
 ## GitLab Action Levels
 
@@ -84,9 +96,13 @@ For GitLab level 2, the expected button sequence is deterministic: click `Start 
 
 ## Chrome DevTools Stability
 
-When controlling the user's real Chrome/Edge session through Chrome DevTools MCP, prefer platform-native browser actions: page selection, snapshots, locator/accessibility clicks, keyboard input, and text filling.
+Chrome DevTools MCP is useful for diagnostics and constrained fallback work, but it is not DiffDeck's primary GitLab inline-comment engine. Use it to verify authentication, inspect network or console behavior, confirm that target files and lines are visible, or perform small browser actions when the page structure is manageable.
 
-Avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script`/console execution for GitLab prefill. In real default-browser sessions, these calls can close the DevTools transport (`Transport closed`) and detach the authenticated browser connection. If a DevTools transport closes after such a call, do not keep retrying the same technique. Reconnect at most once, then continue only with non-injection actions or stop and explain that a stable true-session browser connection is missing.
+Known GitLab limits: large diffs can produce huge snapshots, lazy-loaded or virtualized files can recycle line nodes, and inline comment buttons may appear only after a real hover. If a target line cannot be addressed reliably, do not publish elsewhere.
+
+When controlling a Chrome/Edge session through Chrome DevTools MCP, prefer platform-native browser actions: page selection, snapshots, locator/accessibility clicks, hover, scroll, keyboard input, and text filling.
+
+Avoid JavaScript injection, DOM mutation scripts, and generic `evaluate_script`/console execution for GitLab prefill. In real browser sessions, these calls can close the DevTools transport (`Transport closed`) and detach the authenticated browser connection. If a DevTools transport closes after such a call, do not keep retrying the same technique. Reconnect at most once, then continue only with non-injection actions or stop and explain that a stable browser connection is missing.
 
 Use injected JavaScript only as a last resort after telling the user why it is needed and when losing the browser-control connection would be acceptable. It should not be part of the default GitLab prefill path.
 
@@ -94,17 +110,18 @@ Use injected JavaScript only as a last resort after telling the user why it is n
 
 1. Use `list_approved_findings` to retrieve only comments approved by the human.
 2. If `list_approved_findings` is unavailable, use `list_findings` and keep only findings with `status: "approved"`.
-3. Confirm the chosen browser mode. If the user did not choose a mode yet, ask for A/B/C and wait.
+3. Confirm the chosen browser mode. If the user did not choose a mode yet, ask for one of the six supported modes and wait.
 4. For GitLab, confirm the chosen action level. If it is missing, ask for form-only prefill, draft review comments, or publish/submit.
 5. Open and control the provided GitLab, GitHub, Bitbucket, or review platform URL. If the user asks to use their existing authenticated session, use browser automation attached to the OS default browser rather than an integrated or isolated browser.
 6. Before placing comments, verify that the browser tool can see an authenticated review page, not only a sign-in page or an isolated browser page.
 7. Expand GitLab diff files when needed to make approved target files and lines commentable. Use visible controls such as `Expand all files`, `Show file`, or equivalent per-file expand buttons when they are present and relevant.
 8. Navigate directly to the changed file and target line for each finding.
 9. Place and immediately persist the comment according to the chosen action level.
-10. Stop before publishing unless the user explicitly asks to submit.
-11. Release the browser connection when the browser automation tool provides a close, disconnect, detach, or stop-session action. Do not close the user's normal browser window unless they explicitly asked for it.
-12. If the connection cannot be released from the agent side, tell the user exactly how to disconnect it for the mode being used.
-13. Report which comments were placed, which could not be placed, and whether the browser connection was disconnected or still needs user action.
+10. Verify that the thread or draft comment exists before moving to the next finding.
+11. Stop before publishing unless the user explicitly asks to submit.
+12. Release the browser connection when the browser automation tool provides a close, disconnect, detach, or stop-session action. Do not close the user's normal browser window unless they explicitly asked for it.
+13. If the connection cannot be released from the agent side, tell the user exactly how to disconnect it for the mode being used.
+14. Report which comments were placed, which could not be placed, and whether the browser connection was disconnected or still needs user action.
 
 ## Browser Disconnection
 
@@ -118,9 +135,11 @@ Preferred behavior:
 
 Manual steps by mode:
 
+- Playwright MCP + Chrome Extension: disconnect the MCP session or stop the MCP server; if needed, disable the extension connection for the selected tab.
+- Playwright MCP with persistent profile: close the dedicated Playwright browser session through the browser tool if available.
+- Playwright MCP via CDP / remote debugging: stop the Chrome process that was launched with remote debugging, or close that dedicated debugging browser window. If it was the user's normal browser, do not close it automatically; ask the user.
 - Chrome DevTools MCP with `--autoConnect`: revoke/stop the DevTools MCP connection from the AI tool or MCP server, then in Chrome open `chrome://inspect/#remote-debugging` and disable remote debugging if the user enabled it only for this task.
 - Chrome DevTools MCP with `--browser-url=http://127.0.0.1:9222`: stop the Chrome process that was launched with remote debugging, or close that dedicated debugging browser window. If it was the user's normal browser, do not close it automatically; ask the user.
-- Browser-extension MCP: disconnect or disable the extension session for the current AI tool, or disable the extension if it was enabled only for this task.
 - Integrated browser fallback: close the controlled tab/session when the tool allows it, then tell the user that this was a separate browser session.
 
 Do not leave an active browser-control session silently. The final message must include one of:
@@ -142,7 +161,7 @@ Do not leave an active browser-control session silently. The final message must 
 - When using the OS default browser, do not ask the user to reauthenticate in an integrated browser if their normal browser is already logged in.
 - Do not claim default-browser prefill is possible just because the URL can be opened. It is possible only if a tool can also inspect and control that browser.
 - If the visible controllable page is a sign-in page while the user's default browser is already logged in, treat the current browser tool as isolated from the true session.
-- If no tool can control the default browser, stop and say which capability is missing. Offer only the supported modes: configure true session mode, continue in fallback mode after login, or use manual mode.
+- If no tool can control the expected browser, stop and say which capability is missing. Offer only the supported modes in priority order: Playwright extension, Playwright persistent profile, Playwright CDP, Chrome DevTools diagnostic fallback, integrated browser, or manual mode.
 - Do not leave browser automation attached silently after prefill or publication work is done.
 
 ## Comment Text
