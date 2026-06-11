@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useState } from "react";
-import type { ReviewSnapshot } from "@diffdeck/core";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { ReviewConversationMessage, ReviewSnapshot } from "@diffdeck/core";
 import { Button } from "../../../../shared/components/Button/Button.js";
 import type { ReviewDiffContext } from "../../../review-diff/review-diff-context.js";
 import "./ReviewConversationPanel.scss";
@@ -33,6 +33,29 @@ function formatFileScope(filePaths: string[]): string {
   return `${filePaths.length} files`;
 }
 
+const agentRevealIntervalMs = 42;
+const bottomStickThresholdPx = 96;
+
+function getNextRevealIndex(body: string, currentIndex: number): number {
+  if (currentIndex >= body.length) {
+    return body.length;
+  }
+
+  const minNextIndex = Math.min(body.length, currentIndex + 6);
+  const maxNextIndex = Math.min(body.length, currentIndex + 18);
+
+  if (minNextIndex >= body.length) {
+    return body.length;
+  }
+
+  const nextBreakIndex = body.slice(minNextIndex, maxNextIndex).search(/[\s,.;:!?)]/);
+  return nextBreakIndex >= 0 ? minNextIndex + nextBreakIndex + 1 : maxNextIndex;
+}
+
+function getAgentBody(message: ReviewConversationMessage, revealedAgentBodies: Record<string, string>): string {
+  return message.role === "agent" ? (revealedAgentBodies[message.id] ?? message.body) : message.body;
+}
+
 export function ReviewConversationPanel({
   onAsk,
   onClearConversation,
@@ -43,6 +66,12 @@ export function ReviewConversationPanel({
   snapshot,
 }: ReviewConversationPanelProps) {
   const questionId = useId();
+  const messagesRef = useRef<HTMLDivElement>(null);
+  const hasInitializedConversationRef = useRef(false);
+  const lastConversationLengthRef = useRef(snapshot.conversation.length);
+  const hasUserDetachedFromBottomRef = useRef(false);
+  const shouldStickToBottomRef = useRef(true);
+  const touchStartYRef = useRef<number | undefined>(undefined);
   const [body, setBody] = useState("");
   const [isReviewAttached, setIsReviewAttached] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -50,6 +79,7 @@ export function ReviewConversationPanel({
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+  const [revealedAgentBodies, setRevealedAgentBodies] = useState<Record<string, string>>({});
   const findingById = useMemo(
     () => new Map(snapshot.findings.map((finding) => [finding.id, finding])),
     [snapshot.findings],
@@ -78,6 +108,47 @@ export function ReviewConversationPanel({
   const agentPrompt =
     "Start watching DiffDeck chat: call wait_for_conversation_message, use relatedFindingId, relatedFilePath, relatedFilePaths, relatedLine, and relatedLineSide as context when present, then answer with add_conversation_reply. Repeat until I ask you to stop.";
 
+  const scrollMessagesToBottom = (behavior: ScrollBehavior = "smooth", options?: { force?: boolean }) => {
+    if (hasUserDetachedFromBottomRef.current && !options?.force) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      const messages = messagesRef.current;
+
+      if (!messages) {
+        return;
+      }
+
+      messages.scrollTo({
+        behavior,
+        top: messages.scrollHeight,
+      });
+    });
+  };
+
+  const detachMessagesFromBottom = () => {
+    hasUserDetachedFromBottomRef.current = true;
+    shouldStickToBottomRef.current = false;
+  };
+
+  const updateMessageStickiness = () => {
+    const messages = messagesRef.current;
+
+    if (!messages) {
+      return;
+    }
+
+    const isNearBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < bottomStickThresholdPx;
+    shouldStickToBottomRef.current = isNearBottom;
+
+    if (isNearBottom) {
+      hasUserDetachedFromBottomRef.current = false;
+    } else {
+      hasUserDetachedFromBottomRef.current = true;
+    }
+  };
+
   useEffect(() => {
     if (selectedFindingId && !findingById.has(selectedFindingId)) {
       onScopeChange(undefined);
@@ -99,6 +170,89 @@ export function ReviewConversationPanel({
     return () => window.clearTimeout(timeoutId);
   }, [state]);
 
+  useEffect(() => {
+    setRevealedAgentBodies((currentBodies) => {
+      const shouldStreamNewMessages = hasInitializedConversationRef.current;
+      const nextBodies: Record<string, string> = {};
+
+      for (const message of snapshot.conversation) {
+        if (message.role !== "agent") {
+          continue;
+        }
+
+        const currentBody = currentBodies[message.id];
+
+        if (currentBody === undefined) {
+          nextBodies[message.id] = shouldStreamNewMessages ? "" : message.body;
+          continue;
+        }
+
+        nextBodies[message.id] = message.body.startsWith(currentBody) ? currentBody : message.body;
+      }
+
+      return nextBodies;
+    });
+    hasInitializedConversationRef.current = true;
+  }, [snapshot.conversation]);
+
+  useEffect(() => {
+    const hasStreamingAgentMessage = snapshot.conversation.some(
+      (message) => message.role === "agent" && (revealedAgentBodies[message.id] ?? message.body).length < message.body.length,
+    );
+
+    if (!hasStreamingAgentMessage) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setRevealedAgentBodies((currentBodies) => {
+        const nextBodies = { ...currentBodies };
+
+        for (const message of snapshot.conversation) {
+          if (message.role !== "agent") {
+            continue;
+          }
+
+          const currentBody = currentBodies[message.id] ?? "";
+
+          if (currentBody.length >= message.body.length) {
+            continue;
+          }
+
+          nextBodies[message.id] = message.body.slice(0, getNextRevealIndex(message.body, currentBody.length));
+        }
+
+        return nextBodies;
+      });
+    }, agentRevealIntervalMs);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [revealedAgentBodies, snapshot.conversation]);
+
+  useEffect(() => {
+    const conversationLength = snapshot.conversation.length;
+    const newMessages = snapshot.conversation.slice(lastConversationLengthRef.current);
+    const hasNewHumanMessage = newMessages.some((message) => message.role === "human");
+    const hasNewAgentMessage = newMessages.some((message) => message.role === "agent");
+
+    if (hasNewHumanMessage) {
+      hasUserDetachedFromBottomRef.current = false;
+      shouldStickToBottomRef.current = true;
+      scrollMessagesToBottom("smooth", { force: true });
+    } else if ((hasNewAgentMessage || isAwaitingAgentReply) && !hasUserDetachedFromBottomRef.current) {
+      shouldStickToBottomRef.current = true;
+      scrollMessagesToBottom("smooth");
+    }
+
+    lastConversationLengthRef.current = conversationLength;
+  }, [isAwaitingAgentReply, snapshot.conversation.length]);
+
+  useEffect(() => {
+    if (shouldStickToBottomRef.current) {
+      scrollMessagesToBottom("auto");
+    }
+  }, [revealedAgentBodies]);
+
   const ask = async () => {
     const question = body.trim();
     if (!question) {
@@ -115,6 +269,9 @@ export function ReviewConversationPanel({
       });
       setBody("");
       setState("sent");
+      hasUserDetachedFromBottomRef.current = false;
+      shouldStickToBottomRef.current = true;
+      scrollMessagesToBottom("smooth", { force: true });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Unknown send error");
       setState("failed");
@@ -204,37 +361,79 @@ export function ReviewConversationPanel({
         </div>
       </header>
 
-      <div className="review-conversation-panel__messages" aria-live="polite">
-        {snapshot.conversation.length ? (
-          snapshot.conversation.map((message) => {
-            const relatedFinding = message.relatedFindingId ? findingById.get(message.relatedFindingId) : undefined;
-            const relatedFiles = message.relatedFilePaths ?? (message.relatedFilePath ? [message.relatedFilePath] : []);
-            const relatedFileLabel = message.relatedLine
-              ? `${message.relatedFilePath ?? relatedFiles[0]}:${message.relatedLine} (${message.relatedLineSide ?? "new"})`
-              : formatFileScope(relatedFiles);
+      <div
+        className="review-conversation-panel__messages"
+        aria-live="polite"
+        onScroll={updateMessageStickiness}
+        onTouchMove={(event) => {
+          const touch = event.touches[0];
 
-            return (
+          if (touchStartYRef.current !== undefined && touch && touch.clientY > touchStartYRef.current) {
+            detachMessagesFromBottom();
+          }
+        }}
+        onTouchStart={(event) => {
+          touchStartYRef.current = event.touches[0]?.clientY;
+        }}
+        onWheel={(event) => {
+          if (event.deltaY < 0) {
+            detachMessagesFromBottom();
+          }
+        }}
+        ref={messagesRef}
+      >
+        {snapshot.conversation.length ? (
+          <>
+            {snapshot.conversation.map((message) => {
+              const relatedFinding = message.relatedFindingId ? findingById.get(message.relatedFindingId) : undefined;
+              const relatedFiles = message.relatedFilePaths ?? (message.relatedFilePath ? [message.relatedFilePath] : []);
+              const relatedFileLabel = message.relatedLine
+                ? `${message.relatedFilePath ?? relatedFiles[0]}:${message.relatedLine} (${message.relatedLineSide ?? "new"})`
+                : formatFileScope(relatedFiles);
+              const displayedBody = getAgentBody(message, revealedAgentBodies);
+              const isAgentStreaming = message.role === "agent" && displayedBody.length < message.body.length;
+
+              return (
+                <article
+                  className={`review-conversation-panel__message review-conversation-panel__message--${message.role}`}
+                  key={message.id}
+                >
+                  <header className="review-conversation-panel__message-header">
+                    <span className="review-conversation-panel__speaker">
+                      {message.role === "human" ? "You" : message.agentName ?? "Agent"}
+                    </span>
+                    <time className="review-conversation-panel__time" dateTime={message.createdAt}>
+                      {formatMessageTime(message.createdAt)}
+                    </time>
+                  </header>
+                  <div className="review-conversation-panel__message-meta">
+                    <span>{message.isReviewAttached ? "Attached" : "Free chat"}</span>
+                    {relatedFinding ? <span>{relatedFinding.title}</span> : null}
+                    {!relatedFinding && relatedFiles.length ? <span>{relatedFileLabel}</span> : null}
+                  </div>
+                  <p
+                    className={`review-conversation-panel__body ${
+                      isAgentStreaming ? "review-conversation-panel__body--streaming" : ""
+                    }`}
+                  >
+                    {displayedBody}
+                  </p>
+                </article>
+              );
+            })}
+            {isAwaitingAgentReply ? (
               <article
-                className={`review-conversation-panel__message review-conversation-panel__message--${message.role}`}
-                key={message.id}
+                aria-label="Waiting for agent reply"
+                className="review-conversation-panel__message review-conversation-panel__message--agent review-conversation-panel__message--pending-reply"
               >
-                <header className="review-conversation-panel__message-header">
-                  <span className="review-conversation-panel__speaker">
-                    {message.role === "human" ? "You" : message.agentName ?? "Agent"}
-                  </span>
-                  <time className="review-conversation-panel__time" dateTime={message.createdAt}>
-                    {formatMessageTime(message.createdAt)}
-                  </time>
-                </header>
-                <div className="review-conversation-panel__message-meta">
-                  <span>{message.isReviewAttached ? "Attached" : "Free chat"}</span>
-                  {relatedFinding ? <span>{relatedFinding.title}</span> : null}
-                  {!relatedFinding && relatedFiles.length ? <span>{relatedFileLabel}</span> : null}
+                <div aria-hidden="true" className="review-conversation-panel__typing-dots">
+                  <span>.</span>
+                  <span>.</span>
+                  <span>.</span>
                 </div>
-                <p className="review-conversation-panel__body">{message.body}</p>
               </article>
-            );
-          })
+            ) : null}
+          </>
         ) : (
           <div className="review-conversation-panel__empty">
             <p className="review-conversation-panel__empty-title">No conversation yet</p>
@@ -306,6 +505,14 @@ export function ReviewConversationPanel({
             className="review-conversation-panel__textarea"
             id={questionId}
             onChange={(event) => setBody(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) {
+                return;
+              }
+
+              event.preventDefault();
+              void ask();
+            }}
             placeholder="Ask about the review, a finding, or the next decision..."
             rows={3}
             value={body}
